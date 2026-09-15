@@ -6,8 +6,6 @@
 **Vercel URL:** `https://<ใส่ URL หลัง deploy>.vercel.app`
 **GitHub:** `repo:sarunyu-d-commits/project-PLC `
 
-![CI](https://github.com/<user>/<repo>/actions/workflows/ci.yml/badge.svg)
-
 ---
 
 ## 1. วัตถุประสงค์
