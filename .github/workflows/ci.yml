@@ -1,0 +1,78 @@
+name: CI
+
+on:
+  push:
+    branches: ["**"]
+  pull_request:
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  web:
+    name: Web (install → lint → typecheck → test → build)
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      NEXT_TELEMETRY_DISABLED: 1
+      # ค่าหลอกสำหรับ build ใน CI เท่านั้น — Vercel ใช้ค่าจริงจาก Project Settings ตอน deploy
+      NEXT_PUBLIC_SUPABASE_URL: https://ci-placeholder.supabase.co
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder-key
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Type check
+        run: npm run typecheck
+
+      - name: Unit tests
+        run: npm test
+
+      - name: Build
+        run: npm run build
+
+  gateway:
+    name: PLC Gateway (unit tests)
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    defaults:
+      run:
+        working-directory: gateway
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Compile check
+        run: python -m py_compile plc_gateway.py plc_api.py
+
+      - name: Unit tests
+        run: python -m unittest -v test_gateway
+
+  secrets-guard:
+    name: Secret leak guard
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Block service role key in web code and committed env files
+        run: |
+          if git ls-files | grep -E '(^|/)\.env($|\.local$)'; then
+            echo "::error::.env file is committed"; exit 1
+          fi
+          if grep -rInE 'SERVICE_ROLE|service_role_key|sb_secret_' app components lib proxy.ts; then
+            echo "::error::Service role / secret key referenced in web code"; exit 1
+          fi
+          echo "No secrets found"
