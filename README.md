@@ -4,7 +4,7 @@
 งานรายวิชา Programming in Automation Systems
 
 **Vercel URL:** `https://<ใส่ URL หลัง deploy>.vercel.app`
-**GitHub:** `https://github.com/<user>/<repo>`
+**GitHub:** `repo:sarunyu-d-commits/project-PLC `
 
 ![CI](https://github.com/<user>/<repo>/actions/workflows/ci.yml/badge.svg)
 
