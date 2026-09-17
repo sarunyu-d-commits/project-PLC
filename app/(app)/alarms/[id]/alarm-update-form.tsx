@@ -36,6 +36,11 @@ export function AlarmUpdateForm({ alarm, allowed }: { alarm: Alarm; allowed: Ala
         <textarea className="input" rows={3} maxLength={1000} defaultValue={v?.action_taken ?? alarm.action_taken ?? ""} required={closing} {...errProps("action_taken", state)} />
       </Field>
       <div><SubmitButton>{closing && alarm.status !== "closed" ? "ปิด Alarm" : "บันทึก"}</SubmitButton></div>
+      {closing && alarm.status !== "closed" && (
+        <p className="text-sm text-steel">
+          ถ้าเป็น Alarm สุดท้ายของเครื่อง สถานะเครื่องจะเปลี่ยนเป็น Stop ให้ Admin ตั้งเป็น Running เมื่อตรวจแล้วพร้อมเดินเครื่อง
+        </p>
+      )}
     </form>
   );
 }

@@ -112,6 +112,7 @@ audit_logs      เขียนโดย trigger เท่านั้น
 - ต้องมี Admin อย่างน้อย 1 คน
 - Gateway สร้าง Alarm ซ้ำขณะที่ Alarm เดิมยังไม่ปิดไม่ได้ (partial unique index)
 - ผู้ใช้ใหม่ได้ Role Viewer อัตโนมัติ
+- **สถานะเครื่องตาม Alarm:** มี Alarm ที่ยังไม่ปิด เครื่องเป็น Alarm, ปิด Alarm ตัวสุดท้ายแล้วเครื่องเป็น Stop (ไม่กลับเป็น Running เอง เพื่อให้คนยืนยันก่อนเดินเครื่อง) ยกเว้นเครื่องที่รับสถานะจาก PLC
 
 ### สิทธิ์ตาม Role (RLS)
 
@@ -133,6 +134,7 @@ audit_logs      เขียนโดย trigger เท่านั้น
 1. สร้าง Project ใหม่ที่ supabase.com
 2. เมนู **SQL Editor** วางเนื้อหา `supabase/schema.sql` แล้วกด Run
 3. (ถ้าต้องการข้อมูลตัวอย่าง) วาง `supabase/seed.sql` แล้วกด Run
+   > ถ้าเคยรัน `schema.sql` รุ่นก่อนไปแล้ว ไม่ต้องรันใหม่ทั้งไฟล์ ให้รันไฟล์ใน `supabase/migrations/` ที่ยังไม่เคยรันตามลำดับเลข
 4. เมนู **Authentication > Users > Add user** สร้างผู้ใช้ (ติ๊ก Auto Confirm)
 5. ตั้งผู้ใช้คนแรกเป็น Admin ใน SQL Editor
    ```sql
@@ -217,7 +219,7 @@ curl -X POST localhost:8000/api/plc -H "X-API-Key: <PLC_API_KEY>" \
 | Unit (Vitest) | 22 | Validation, กฎเปลี่ยนสถานะ Alarm, mapping PLC |
 | Unit (Gateway) | 7 | สร้าง Alarm ครั้งเดียว, retry เมื่อเครือข่ายล่ม, ไม่สร้างซ้ำหลังรีสตาร์ท |
 | Database (SQL) | – | RLS ของแต่ละ Role, constraint, trigger |
-| End-to-end (Playwright) | 29 | Login/สิทธิ์, CRUD, ค้นหา, validation, ปิด Alarm, งานซ่อม, CSV, มือถือ |
+| End-to-end (Playwright) | 35 | Login/สิทธิ์, CRUD, ค้นหา, validation, ปิด Alarm, สถานะเครื่องตาม Alarm, งานซ่อม, CSV, มือถือ |
 
 ตัวอย่าง Acceptance Criteria ที่ทดสอบ
 

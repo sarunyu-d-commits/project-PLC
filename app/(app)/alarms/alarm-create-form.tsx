@@ -68,7 +68,10 @@ export function AlarmCreateForm({ machines, defaultMachine }: {
       <Field label="สาเหตุเบื้องต้น (ถ้าทราบ)" name="cause" state={state} className="sm:col-span-2">
         <input className="input" defaultValue={v?.cause} maxLength={500} {...errProps("cause", state)} />
       </Field>
-      <div className="sm:col-span-2"><SubmitButton>บันทึก Alarm</SubmitButton></div>
+      <div className="flex flex-wrap items-center gap-x-4 gap-y-2 sm:col-span-2">
+        <SubmitButton>บันทึก Alarm</SubmitButton>
+        <p className="text-sm text-steel">เครื่องที่เลือกจะเปลี่ยนสถานะเป็น Alarm อัตโนมัติ</p>
+      </div>
     </form>
   );
 }
