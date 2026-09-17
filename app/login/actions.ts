@@ -1,15 +1,11 @@
 "use server";
 
 import { redirect } from "next/navigation";
+import { safeNext } from "@/lib/safe-redirect";
 import { createClient } from "@/lib/supabase/server";
 import { formDataToObject, loginSchema, toFieldErrors } from "@/lib/validation";
 import { withValues } from "@/lib/validation";
 import type { ActionState } from "@/lib/types";
-
-function safeNext(next: string | undefined): string {
-  // กัน open redirect: รับเฉพาะ path ภายในเว็บ
-  return next && next.startsWith("/") && !next.startsWith("//") ? next : "/dashboard";
-}
 
 async function loginImpl(_prev: ActionState, formData: FormData): Promise<ActionState> {
   const raw = formDataToObject(formData);

@@ -172,7 +172,9 @@ def read_plc_device(device: str):
 @app.post("/api/plc")
 def write_plc_device(request: PlcWriteRequest, x_api_key: str = Header(default="")):
     # เดิมใครก็เขียนค่าเข้า PLC ได้ ตอนนี้ต้องมี API key
-    if not PLC_API_KEY or not secrets.compare_digest(x_api_key, PLC_API_KEY):
+    if not PLC_API_KEY or PLC_API_KEY == "change-me" or len(PLC_API_KEY) < 16:
+        raise HTTPException(status_code=503, detail="Set a strong PLC_API_KEY (16+ chars) in gateway/.env to enable writes")
+    if not secrets.compare_digest(x_api_key, PLC_API_KEY):
         raise HTTPException(status_code=401, detail="Invalid or missing X-API-Key")
     device = check_device(request.device, WRITABLE_DEVICES)
     try:

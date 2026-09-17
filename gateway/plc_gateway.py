@@ -92,6 +92,9 @@ class SupabaseRest:
                 return e.code, json.loads(raw)
             except json.JSONDecodeError:
                 return e.code, raw
+        except (urllib.error.URLError, TimeoutError, OSError, json.JSONDecodeError) as e:
+            # เน็ตหลุด / Supabase ไม่ตอบ: คืนรหัส 0 ให้ผู้เรียกจัดการ ไม่ให้ thread ตาย
+            return 0, str(e)
 
 
 @dataclass
@@ -113,7 +116,7 @@ class Gateway:
             return True
         code = urllib.parse.quote(self.cfg.machine_code)
         status, rows = self.rest.request("GET", f"machines?select=id,plc_linked&machine_code=eq.{code}")
-        if status != 200 or not rows:
+        if status != 200 or not isinstance(rows, list) or not rows:
             log.error("ไม่พบเครื่อง %s ใน Supabase (HTTP %s)", self.cfg.machine_code, status)
             return False
         if not rows[0]["plc_linked"]:
@@ -144,15 +147,21 @@ class Gateway:
             self.pending_alarm = True
         self.last_err = m3
 
-        code, _ = self.rest.request(
+        code, rows = self.rest.request(
             "PATCH",
-            f"machines?id=eq.{self.machine_id}&plc_linked=eq.true",
+            f"machines?id=eq.{self.machine_id}&plc_linked=eq.true&select=id",
             {"status": status, "last_seen_at": now},
-            prefer="return=minimal",
+            prefer="return=representation",
         )
-        if code not in (200, 204):
+        if code != 200:
             self.stats["errors"] += 1
-            log.error("อัปเดตสถานะไม่สำเร็จ (HTTP %s)", code)
+            log.error("อัปเดตสถานะไม่สำเร็จ (HTTP %s): %s", code, rows)
+            return None
+        if not rows:
+            # Admin ยกเลิก 'รับสถานะจาก PLC' หรือลบเครื่องระหว่างที่ Gateway ทำงาน
+            self.stats["errors"] += 1
+            log.warning("เครื่อง %s ไม่ได้ผูกกับ PLC แล้ว หยุดส่งข้อมูลจนกว่าจะผูกใหม่", self.cfg.machine_code)
+            self.machine_id = None
             return None
 
         if self.pending_alarm:
@@ -186,7 +195,11 @@ class Gateway:
     def run_forever(self, stop_flag: Callable[[], bool] = lambda: False) -> None:
         log.info("เริ่ม Gateway: %s ทุก %.1f วินาที", self.cfg.machine_code, self.cfg.poll_seconds)
         while not stop_flag():
-            self.cycle()
+            try:
+                self.cycle()
+            except Exception:  # กันไม่ให้ Gateway หยุดถาวรจากข้อผิดพลาดที่ไม่คาดคิด
+                self.stats["errors"] += 1
+                log.exception("Gateway cycle failed")
             time.sleep(self.cfg.poll_seconds)
 
 

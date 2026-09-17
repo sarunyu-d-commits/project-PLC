@@ -29,7 +29,8 @@ export function buildAlarmQuery(supabase: Client, f: AlarmFilters) {
     .select(
       "id, alarm_code, description, severity, status, occurred_at, cause, action_taken, source, closed_at, machine_id, machine:machines(machine_code, name), closer:profiles!alarms_closed_by_fkey(full_name)",
     )
-    .order("occurred_at", { ascending: false });
+    .order("occurred_at", { ascending: false })
+    .order("id"); // ลำดับคงที่ สำหรับการแบ่งหน้า
   if (f.q) query = query.or(`alarm_code.ilike.%${f.q}%,description.ilike.%${f.q}%`);
   if (f.machine) query = query.eq("machine_id", f.machine);
   if (f.status === "active") query = query.neq("status", "closed");

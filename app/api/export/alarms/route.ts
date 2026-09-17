@@ -1,5 +1,6 @@
 import type { NextRequest } from "next/server";
 import { buildAlarmQuery, parseAlarmFilters } from "@/lib/alarm-query";
+import { fetchAll } from "@/lib/fetch-all";
 import { getCurrentProfile } from "@/lib/auth";
 import { ALARM_STATUS_LABEL, SEVERITY_LABEL } from "@/lib/labels";
 import { createClient } from "@/lib/supabase/server";
@@ -18,7 +19,11 @@ export async function GET(request: NextRequest) {
 
   const sp = Object.fromEntries(request.nextUrl.searchParams.entries());
   const supabase = await createClient();
-  const { data, error } = await buildAlarmQuery(supabase, parseAlarmFilters(sp)).limit(5000);
+  const filters = parseAlarmFilters(sp);
+  const { rows: data, error, truncated } = await fetchAll(
+    (from, to) => buildAlarmQuery(supabase, filters).range(from, to),
+    { max: 50_000 },
+  );
   if (error) return new Response("Export failed", { status: 500 });
 
   const header = ["Occurred At", "Machine ID", "Machine Name", "Alarm Code", "Description", "Severity", "Status", "Cause", "Action Taken", "Closed At", "Closed By", "Source"];
@@ -45,6 +50,7 @@ export async function GET(request: NextRequest) {
       "Content-Type": "text/csv; charset=utf-8",
       "Content-Disposition": `attachment; filename="alarms-${stamp}.csv"`,
       "Cache-Control": "no-store",
+      ...(truncated ? { "X-Export-Truncated": "50000" } : {}),
     },
   });
 }

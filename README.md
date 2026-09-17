@@ -4,7 +4,9 @@
 งานรายวิชา Programming in Automation Systems
 
 **Vercel URL:** `https://<ใส่ URL หลัง deploy>.vercel.app`
-**GitHub:** `repo:sarunyu-d-commits/project-PLC `
+**GitHub:** `https://github.com/<user>/<repo>`
+
+![CI](https://github.com/<user>/<repo>/actions/workflows/ci.yml/badge.svg)
 
 ---
 
@@ -112,6 +114,7 @@ audit_logs      เขียนโดย trigger เท่านั้น
 - ต้องมี Admin อย่างน้อย 1 คน
 - Gateway สร้าง Alarm ซ้ำขณะที่ Alarm เดิมยังไม่ปิดไม่ได้ (partial unique index)
 - ผู้ใช้ใหม่ได้ Role Viewer อัตโนมัติ
+- ผู้บันทึกและผู้ปิด Alarm มาจากบัญชีที่ Login เสมอ แก้หรือปลอมผ่าน API ไม่ได้ ข้อมูลตั้งต้นของ Alarm (เครื่อง, รหัส, เวลาเกิด, แหล่งที่มา) แก้ไม่ได้หลังบันทึก และ Alarm ที่ปิดแล้วต้องให้ Admin เปิดใหม่ก่อนจึงแก้ได้
 - **สถานะเครื่องตาม Alarm:** มี Alarm ที่ยังไม่ปิด เครื่องเป็น Alarm, ปิด Alarm ตัวสุดท้ายแล้วเครื่องเป็น Stop (ไม่กลับเป็น Running เอง เพื่อให้คนยืนยันก่อนเดินเครื่อง) ยกเว้นเครื่องที่รับสถานะจาก PLC
 
 ### สิทธิ์ตาม Role (RLS)
@@ -134,9 +137,10 @@ audit_logs      เขียนโดย trigger เท่านั้น
 1. สร้าง Project ใหม่ที่ supabase.com
 2. เมนู **SQL Editor** วางเนื้อหา `supabase/schema.sql` แล้วกด Run
 3. (ถ้าต้องการข้อมูลตัวอย่าง) วาง `supabase/seed.sql` แล้วกด Run
-   > ถ้าเคยรัน `schema.sql` รุ่นก่อนไปแล้ว ไม่ต้องรันใหม่ทั้งไฟล์ ให้รันไฟล์ใน `supabase/migrations/` ที่ยังไม่เคยรันตามลำดับเลข
-4. เมนู **Authentication > Users > Add user** สร้างผู้ใช้ (ติ๊ก Auto Confirm)
-5. ตั้งผู้ใช้คนแรกเป็น Admin ใน SQL Editor
+   > ถ้าเคยรัน `schema.sql` รุ่นก่อนไปแล้ว ไม่ต้องรันใหม่ทั้งไฟล์ ให้รันไฟล์ใน `supabase/migrations/` ที่ยังไม่เคยรันตามลำดับเลข (002, 003)
+4. **ปิดการสมัครสมาชิกเอง:** เมนู **Authentication > Sign In / Providers** ปิด **Allow new users to sign up** ถ้าไม่ปิด ใครก็สมัครผ่าน API ได้และจะได้สิทธิ์ Viewer ซึ่งอ่านข้อมูลทั้งระบบได้
+5. เมนู **Authentication > Users > Add user** สร้างผู้ใช้ (ติ๊ก Auto Confirm)
+6. ตั้งผู้ใช้คนแรกเป็น Admin ใน SQL Editor
    ```sql
    update public.profiles set role = 'admin'
    where id = (select id from auth.users where email = 'admin@example.com');
@@ -207,25 +211,33 @@ curl -X POST localhost:8000/api/plc -H "X-API-Key: <PLC_API_KEY>" \
 
 สิ่งที่ปรับจาก `plc_api.py` เดิม
 
-- `POST /api/plc` ต้องมี API key และเขียนได้เฉพาะ device ที่อนุญาต
+- `POST /api/plc` ต้องมี API key (ยาว 16 ตัวขึ้นไป) และเขียนได้เฉพาะ device ที่อนุญาต
 - Gateway ส่งข้อมูลเข้า Supabase แทนการให้เว็บเรียก PLC โดยตรง
 - mock mode ใช้ lock กันข้อมูลชนกันระหว่าง API กับ Gateway
 - เชื่อมต่อ COM ครั้งเดียวต่อ thread และต่อใหม่อัตโนมัติเมื่ออ่านค่าผิดพลาด
+- เน็ตหลุดหรือ Supabase ไม่ตอบ Gateway จะลองใหม่รอบถัดไปโดยไม่หยุดทำงาน
 
 ## 7. การทดสอบ
 
 | ระดับ | จำนวน | ครอบคลุม |
 |---|---|---|
-| Unit (Vitest) | 22 | Validation, กฎเปลี่ยนสถานะ Alarm, mapping PLC |
-| Unit (Gateway) | 7 | สร้าง Alarm ครั้งเดียว, retry เมื่อเครือข่ายล่ม, ไม่สร้างซ้ำหลังรีสตาร์ท |
-| Database (SQL) | – | RLS ของแต่ละ Role, constraint, trigger |
-| End-to-end (Playwright) | 35 | Login/สิทธิ์, CRUD, ค้นหา, validation, ปิด Alarm, สถานะเครื่องตาม Alarm, งานซ่อม, CSV, มือถือ |
+| Unit (Vitest) | 31 | Validation, กฎเปลี่ยนสถานะ Alarm, mapping PLC, กัน open redirect |
+| Unit (Gateway) | 10 | สร้าง Alarm ครั้งเดียว, retry เมื่อเครือข่ายล่ม, ไม่หยุดทำงานเมื่อเน็ตหลุด, หยุดส่งเมื่อเลิกผูก PLC |
+| Database (SQL) | – | RLS ของแต่ละ Role, constraint, trigger, การปลอมข้อมูลผ่าน API |
+| End-to-end (Playwright) | 39 | Login/สิทธิ์, CRUD, ค้นหา, validation, ปิด Alarm, สถานะเครื่องตาม Alarm, งานซ่อม, CSV เกิน 1,000 แถว, มือถือ |
 
 ตัวอย่าง Acceptance Criteria ที่ทดสอบ
 
 - REQ-MCH-02: กรอก Machine ID ซ้ำ ระบบไม่บันทึกและแจ้งเตือนที่ช่องนั้น
 - REQ-ALM-02: ปิด Alarm โดยไม่มีสาเหตุไม่ได้ และระบบบันทึกผู้ปิด
 - REQ-SEC-01: Technician เปิดหน้าผู้ใช้งานแล้วถูก redirect
+
+### ข้อจำกัดที่ทราบ
+
+- หน้ารายการแสดงสูงสุด 200 แถว (ยังไม่มีการแบ่งหน้า) ใช้ตัวกรองหรือ Export CSV เพื่อดูทั้งหมด
+- Export CSV สูงสุด 50,000 แถวต่อครั้ง
+- Gateway รองรับเครื่องละหนึ่ง process ถ้ามีหลายเครื่อง ให้รันหลาย instance ด้วย `.env` คนละชุด
+- ผู้ใช้ใหม่ต้องสร้างใน Supabase Dashboard ยังไม่มีหน้าสร้างผู้ใช้ในเว็บ
 
 ## 8. Screenshots
 

@@ -47,7 +47,7 @@ export default async function MaintenancePage(props: PageProps<"/maintenance">) 
   if (f.from) query = query.gte("started_at", `${f.from}T00:00:00+07:00`);
   if (f.to) query = query.lte("started_at", `${f.to}T23:59:59.999+07:00`);
 
-  const [{ data, error }, options] = await Promise.all([query, loadMaintenanceOptions(supabase)]);
+  const [{ data, error }, options] = await Promise.all([query, loadMaintenanceOptions(supabase, { alarmId: prefillAlarm })]);
   const records = (data ?? []) as unknown as MaintenanceRecord[];
   const activeCount = Object.values(f).filter(Boolean).length;
 

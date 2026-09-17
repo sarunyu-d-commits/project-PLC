@@ -25,7 +25,14 @@ describe("REQ-ALM-02: Alarm status transitions", () => {
   it("only admin can reopen a closed alarm", () => {
     expect(checkAlarmUpdate({ from: "closed", to: "open", role: "technician" })).not.toBeNull();
     expect(checkAlarmUpdate({ from: "closed", to: "open", role: "admin" })).toBeNull();
-    expect(allowedNextStatuses("closed", "technician")).toEqual(["closed"]);
+    expect(allowedNextStatuses("closed", "technician")).toEqual([]);
+    expect(allowedNextStatuses("closed", "admin")).toEqual(["open"]);
+  });
+
+  it("closed alarm details are read-only until reopened", () => {
+    expect(
+      checkAlarmUpdate({ from: "closed", to: "closed", role: "admin", cause: "x", actionTaken: "y" }),
+    ).not.toBeNull();
   });
 
   it("closed cannot jump to in_progress", () => {

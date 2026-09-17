@@ -17,7 +17,7 @@ class FakeRest:
         if method == "GET":
             return 200, [{"id": "m-1", "plc_linked": self.plc_linked}]
         if method == "PATCH":
-            return 204, None
+            return 200, ([{"id": "m-1"}] if self.plc_linked else [])
         if method == "POST":
             if self.fail_next_post:
                 self.fail_next_post = False
@@ -101,6 +101,39 @@ class GatewayTest(unittest.TestCase):
         gw = make({"M0": 1, "M1": 1, "M3": 0}, rest)
         self.assertIsNone(gw.cycle())
         self.assertFalse(any(c[0] == "PATCH" for c in rest.calls))
+
+
+class RobustnessTest(unittest.TestCase):
+    def test_network_error_does_not_raise(self):
+        cfg = GatewayConfig(supabase_url="http://127.0.0.1:9", service_role_key="k", timeout_seconds=1)
+        gw = Gateway(cfg, lambda d: 0)  # ใช้ SupabaseRest จริง ต่อไปยังพอร์ตที่ไม่มีใครฟัง
+        self.assertIsNone(gw.cycle())
+        self.assertEqual(gw.stats["errors"], 1)
+
+    def test_unlinked_while_running_stops_alarm_posting(self):
+        rest = FakeRest()
+        bits = {"M0": 1, "M1": 1, "M3": 0}
+        gw = make(bits, rest)
+        gw.cycle()
+        rest.plc_linked = False  # Admin เอาติ๊กออกระหว่างทำงาน
+        bits["M3"] = 1
+        self.assertIsNone(gw.cycle())
+        self.assertEqual(rest.posts(), [])
+        self.assertIsNone(gw.machine_id)
+
+    def test_run_forever_survives_unexpected_error(self):
+        rest = FakeRest()
+        gw = make({"M0": 1, "M1": 1, "M3": 0}, rest)
+        gw.cfg.poll_seconds = 0
+        calls = {"n": 0}
+
+        def boom():
+            calls["n"] += 1
+            raise ValueError("unexpected")
+
+        gw.cycle = boom
+        gw.run_forever(stop_flag=lambda: calls["n"] >= 3)
+        self.assertEqual(calls["n"], 3)
 
 
 if __name__ == "__main__":

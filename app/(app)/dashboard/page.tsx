@@ -3,6 +3,7 @@ import { AlarmStatusMark, MachineStatusMark, SeverityMark } from "@/components/s
 import { PageHeader, Panel, EmptyState } from "@/components/page-header";
 import { requireProfile } from "@/lib/auth";
 import { bangkokDayKey, lastSevenDays } from "@/lib/dates";
+import { fetchAll } from "@/lib/fetch-all";
 import { isStale } from "@/lib/domain/plc";
 import { formatDateTime, MACHINE_STATUS_LABEL } from "@/lib/labels";
 import { createClient } from "@/lib/supabase/server";
@@ -30,7 +31,9 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
         .neq("status", "closed")
         .order("occurred_at", { ascending: false })
         .limit(8),
-      supabase.from("alarms").select("occurred_at, machine_id").gte("occurred_at", week.since),
+      fetchAll<{ occurred_at: string; machine_id: string }>((from, to) =>
+        supabase.from("alarms").select("occurred_at, machine_id").gte("occurred_at", week.since).order("id").range(from, to),
+      ),
       supabase.from("alarms").select("id", { count: "exact", head: true }),
       supabase.from("maintenance_records").select("id", { count: "exact", head: true }).neq("status", "done"),
       supabase.from("maintenance_records").select("id", { count: "exact", head: true }).eq("status", "waiting_part"),
@@ -39,7 +42,7 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
 
   const machines = (machinesRes.data ?? []) as Machine[];
   const activeAlarms = (activeAlarmsRes.data ?? []) as unknown as Alarm[];
-  const weekAlarms = (weekAlarmsRes.data ?? []) as { occurred_at: string; machine_id: string }[];
+  const weekAlarms = weekAlarmsRes.rows;
 
   const counts = Object.fromEntries(STATUS_ORDER.map((s) => [s, 0])) as Record<MachineStatus, number>;
   machines.forEach((m) => counts[m.status]++);

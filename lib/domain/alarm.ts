@@ -22,6 +22,7 @@ export function checkAlarmUpdate(input: AlarmUpdateInput): string | null {
   if (from === "closed" && to !== "closed" && role !== "admin") {
     return "Alarm ที่ปิดแล้ว เปิดใหม่ได้เฉพาะ Admin";
   }
+  if (from === "closed" && to === "closed") return "Alarm ที่ปิดแล้วแก้ไขไม่ได้ ต้องเปิดใหม่ก่อน";
   if (to === "closed") {
     if (!input.cause?.trim()) return "ต้องระบุสาเหตุ (Cause) ก่อนปิด Alarm";
     if (!input.actionTaken?.trim()) return "ต้องระบุการแก้ไข (Action Taken) ก่อนปิด Alarm";
@@ -31,5 +32,6 @@ export function checkAlarmUpdate(input: AlarmUpdateInput): string | null {
 
 export function allowedNextStatuses(from: AlarmStatus, role: AppRole): AlarmStatus[] {
   if (role === "viewer") return [from];
-  return TRANSITIONS[from].filter((to) => !(from === "closed" && to !== "closed" && role !== "admin"));
+  if (from === "closed") return role === "admin" ? ["open"] : [];
+  return TRANSITIONS[from];
 }

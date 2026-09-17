@@ -18,15 +18,16 @@ export default async function MaintenanceDetailPage(props: PageProps<"/maintenan
   if (!id) notFound();
 
   const supabase = await createClient();
-  const [{ data }, options] = await Promise.all([
-    supabase
-      .from("maintenance_records")
-      .select("*, machine:machines(machine_code, name), technician:profiles!maintenance_records_technician_id_fkey(full_name), alarm:alarms(id, alarm_code)")
-      .eq("id", id)
-      .maybeSingle(),
-    loadMaintenanceOptions(supabase),
-  ]);
+  const { data } = await supabase
+    .from("maintenance_records")
+    .select("*, machine:machines(machine_code, name), technician:profiles!maintenance_records_technician_id_fkey(full_name), alarm:alarms(id, alarm_code)")
+    .eq("id", id)
+    .maybeSingle();
   if (!data) notFound();
+  const options = await loadMaintenanceOptions(supabase, {
+    alarmId: data.alarm_id as string | null,
+    technicianId: data.technician_id as string | null,
+  });
   const record = data as MaintenanceRecord & { alarm: { id: string; alarm_code: string } | null };
 
   return (

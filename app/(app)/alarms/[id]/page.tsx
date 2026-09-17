@@ -61,11 +61,15 @@ export default async function AlarmDetailPage(props: PageProps<"/alarms/[id]">) 
             ))}
           </dl>
         </Panel>
-        {isStaff(profile) ? (
+        {isStaff(profile) && alarm.status === "closed" && profile.role !== "admin" ? (
+          <Panel title="อัปเดตสถานะ">
+            <p className="text-steel">Alarm นี้ปิดแล้วและแก้ไขไม่ได้ หากต้องเปิดใหม่หรือแก้ข้อมูล ให้ติดต่อ Admin</p>
+          </Panel>
+        ) : isStaff(profile) ? (
           <Panel title="อัปเดตสถานะ">
             <AlarmUpdateForm alarm={alarm} allowed={allowedNextStatuses(alarm.status, profile.role)} />
-            {alarm.status === "closed" && profile.role !== "admin" && (
-              <p className="mt-3 text-sm text-steel">Alarm นี้ปิดแล้ว หากต้องเปิดใหม่ให้ติดต่อ Admin</p>
+            {alarm.status === "closed" && (
+              <p className="mt-3 text-sm text-steel">Alarm ที่ปิดแล้วแก้ข้อมูลไม่ได้ ต้องเปลี่ยนสถานะเป็น Open ก่อน</p>
             )}
           </Panel>
         ) : (
