@@ -25,10 +25,21 @@ export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
   return (data as Profile | null) ?? null;
 });
 
+export const getSessionUserId = cache(async (): Promise<string | null> => {
+  const supabase = await createClient();
+  const {
+    data: { user },
+  } = await supabase.auth.getUser();
+  return user?.id ?? null;
+});
+
 export async function requireProfile(): Promise<Profile> {
   const profile = await getCurrentProfile();
-  if (!profile) redirect("/login");
-  return profile;
+  if (profile) return profile;
+  // มี session แต่ไม่มีแถวใน profiles (เช่น สร้างผู้ใช้ก่อนรัน schema.sql)
+  // ถ้าส่งไป /login จะวน redirect กับ proxy.ts ไม่จบ
+  if (await getSessionUserId()) redirect("/no-access");
+  redirect("/login");
 }
 
 export async function requireRole(roles: AppRole[]): Promise<Profile> {

@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { AlarmUpdateForm } from "./alarm-update-form";
+import { ReopenAlarmForm } from "./reopen-form";
 import { PageHeader, Panel } from "@/components/page-header";
 import { AlarmStatusMark, SeverityMark } from "@/components/status";
 import { isStaff, requireProfile } from "@/lib/auth";
@@ -61,16 +62,17 @@ export default async function AlarmDetailPage(props: PageProps<"/alarms/[id]">) 
             ))}
           </dl>
         </Panel>
-        {isStaff(profile) && alarm.status === "closed" && profile.role !== "admin" ? (
+        {alarm.status === "closed" && profile.role === "admin" ? (
+          <Panel title="เปิด Alarm ใหม่">
+            <ReopenAlarmForm alarm={alarm} />
+          </Panel>
+        ) : alarm.status === "closed" && isStaff(profile) ? (
           <Panel title="อัปเดตสถานะ">
             <p className="text-steel">Alarm นี้ปิดแล้วและแก้ไขไม่ได้ หากต้องเปิดใหม่หรือแก้ข้อมูล ให้ติดต่อ Admin</p>
           </Panel>
         ) : isStaff(profile) ? (
           <Panel title="อัปเดตสถานะ">
             <AlarmUpdateForm alarm={alarm} allowed={allowedNextStatuses(alarm.status, profile.role)} />
-            {alarm.status === "closed" && (
-              <p className="mt-3 text-sm text-steel">Alarm ที่ปิดแล้วแก้ข้อมูลไม่ได้ ต้องเปลี่ยนสถานะเป็น Open ก่อน</p>
-            )}
           </Panel>
         ) : (
           <Panel><p className="text-steel">บัญชี Viewer ดูข้อมูลได้อย่างเดียว</p></Panel>

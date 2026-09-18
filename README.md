@@ -137,9 +137,10 @@ audit_logs      เขียนโดย trigger เท่านั้น
 1. สร้าง Project ใหม่ที่ supabase.com
 2. เมนู **SQL Editor** วางเนื้อหา `supabase/schema.sql` แล้วกด Run
 3. (ถ้าต้องการข้อมูลตัวอย่าง) วาง `supabase/seed.sql` แล้วกด Run
-   > ถ้าเคยรัน `schema.sql` รุ่นก่อนไปแล้ว ไม่ต้องรันใหม่ทั้งไฟล์ ให้รันไฟล์ใน `supabase/migrations/` ที่ยังไม่เคยรันตามลำดับเลข (002, 003)
+   > ถ้าเคยรัน `schema.sql` รุ่นก่อนไปแล้ว ไม่ต้องรันใหม่ทั้งไฟล์ ให้รันไฟล์ใน `supabase/migrations/` ที่ยังไม่เคยรันตามลำดับเลข (002, 003, 004)
 4. **ปิดการสมัครสมาชิกเอง:** เมนู **Authentication > Sign In / Providers** ปิด **Allow new users to sign up** ถ้าไม่ปิด ใครก็สมัครผ่าน API ได้และจะได้สิทธิ์ Viewer ซึ่งอ่านข้อมูลทั้งระบบได้
 5. เมนู **Authentication > Users > Add user** สร้างผู้ใช้ (ติ๊ก Auto Confirm)
+   > ถ้าสร้างผู้ใช้ไว้ก่อนรัน `schema.sql` ให้รัน `supabase/migrations/004_backfill_profiles.sql` ด้วย ไม่อย่างนั้นผู้ใช้นั้นจะเข้าหน้า "บัญชียังไม่ได้ตั้งค่าสิทธิ์"
 6. ตั้งผู้ใช้คนแรกเป็น Admin ใน SQL Editor
    ```sql
    update public.profiles set role = 'admin'
@@ -224,7 +225,7 @@ curl -X POST localhost:8000/api/plc -H "X-API-Key: <PLC_API_KEY>" \
 | Unit (Vitest) | 31 | Validation, กฎเปลี่ยนสถานะ Alarm, mapping PLC, กัน open redirect |
 | Unit (Gateway) | 10 | สร้าง Alarm ครั้งเดียว, retry เมื่อเครือข่ายล่ม, ไม่หยุดทำงานเมื่อเน็ตหลุด, หยุดส่งเมื่อเลิกผูก PLC |
 | Database (SQL) | – | RLS ของแต่ละ Role, constraint, trigger, การปลอมข้อมูลผ่าน API |
-| End-to-end (Playwright) | 39 | Login/สิทธิ์, CRUD, ค้นหา, validation, ปิด Alarm, สถานะเครื่องตาม Alarm, งานซ่อม, CSV เกิน 1,000 แถว, มือถือ |
+| End-to-end (Playwright) | 45 | Login/สิทธิ์ (รวมบัญชีที่ไม่มี profile), CRUD, เปิด Alarm ใหม่, ค้นหา, validation, ปิด Alarm, สถานะเครื่องตาม Alarm, งานซ่อม, CSV เกิน 1,000 แถว, มือถือ |
 
 ตัวอย่าง Acceptance Criteria ที่ทดสอบ
 

@@ -507,3 +507,12 @@ revoke execute on function public.sync_machine_status_from_alarm() from public, 
 revoke execute on function public.handle_new_user() from public, anon, authenticated;
 revoke execute on function public.write_audit_log() from public, anon, authenticated;
 revoke execute on function public.keep_one_admin() from public, anon, authenticated;
+
+-- ---------------------------------------------------------------------
+-- 8. สร้าง profile ให้ผู้ใช้ที่มีอยู่ก่อน (เหมือน migrations/004_backfill_profiles.sql)
+-- ---------------------------------------------------------------------
+insert into public.profiles (id, full_name)
+select u.id, coalesce(u.raw_user_meta_data ->> 'full_name', split_part(u.email, '@', 1))
+from auth.users u
+where not exists (select 1 from public.profiles p where p.id = u.id)
+on conflict (id) do nothing;
