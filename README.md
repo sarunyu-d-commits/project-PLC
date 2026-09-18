@@ -183,7 +183,7 @@ npm run build       # Production build
 
 `.github/workflows/ci.yml` ทำงานทุกครั้งที่ push และแสดงผล Passed/Failed ในแท็บ Actions
 
-1. **web**: Install (`npm ci`), Lint, Type check, Unit tests, Build
+1. **web**: Install Dependencies (`npm ci`) → Build Project → Lint → Type check → Unit tests (ลำดับตามข้อ 3.10 ของโจทย์)
 2. **gateway**: ตรวจ syntax และรัน unit test ของ Gateway
 3. **secrets-guard**: ล้มเหลวถ้ามีไฟล์ `.env` ถูก commit หรือมี Service Role Key ในโค้ดเว็บ
 
