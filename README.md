@@ -3,7 +3,7 @@
 ระบบเว็บสำหรับติดตามสถานะเครื่องจักร บันทึก Alarm และงานซ่อมบำรุงในโรงงาน
 งานรายวิชา Programming in Automation Systems
 
-**Vercel URL:** `https://<ใส่ URL หลัง deploy>.vercel.app`
+**Vercel URL:** https://project-plc.vercel.app
 **GitHub:** https://github.com/sarunyu-d-commits/project-PLC
 
 [![CI](https://github.com/sarunyu-d-commits/project-PLC/actions/workflows/ci.yml/badge.svg)](https://github.com/sarunyu-d-commits/project-PLC/actions/workflows/ci.yml)
