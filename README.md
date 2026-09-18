@@ -4,9 +4,9 @@
 งานรายวิชา Programming in Automation Systems
 
 **Vercel URL:** `https://<ใส่ URL หลัง deploy>.vercel.app`
-**GitHub:** `https://github.com/<user>/<repo>`
+**GitHub:** https://github.com/sarunyu-d-commits/project-PLC
 
-![CI](https://github.com/<user>/<repo>/actions/workflows/ci.yml/badge.svg)
+[![CI](https://github.com/sarunyu-d-commits/project-PLC/actions/workflows/ci.yml/badge.svg)](https://github.com/sarunyu-d-commits/project-PLC/actions/workflows/ci.yml)
 
 ---
 
@@ -256,19 +256,31 @@ curl -X POST localhost:8000/api/plc -H "X-API-Key: <PLC_API_KEY>" \
 
 **เครื่องมือ:** Claude (Anthropic)
 
-| ขั้นตอน | AI ช่วยอะไร | สิ่งที่ผู้พัฒนาทำ/ตรวจสอบ |
+| ขั้นตอน | AI ช่วยอะไร | สิ่งที่ผู้พัฒนาทำและตรวจสอบ |
 |---|---|---|
-| วิเคราะห์ Requirement | สรุปโจทย์และเอกสารบทที่ 1–3, เทียบกับโค้ดที่มีอยู่ | ตัดสินใจขอบเขต และให้ PLC เป็นส่วนเสริม |
-| ออกแบบฐานข้อมูล | เขียน schema, RLS, trigger | _(ระบุ เช่น ทดลองสิทธิ์แต่ละ Role ใน Supabase)_ |
-| เขียนโค้ด | หน้าเว็บ, Server Actions, Validation, Gateway | _(ระบุ)_ |
-| UI | ออกแบบตามแนว ISA-101 High-Performance HMI (สีสดเฉพาะสถานะผิดปกติ, สถานะมีรูปทรงกำกับ) | _(ระบุ)_ |
-| ทดสอบและ Debug | เขียน unit test และ E2E test, พบและแก้บั๊กตามด้านล่าง | _(ระบุ)_ |
-| CI / Deploy | เขียน workflow และขั้นตอน deploy | ตั้งค่า Supabase, Vercel, GitHub จริง |
+| วิเคราะห์ Requirement | สรุปโจทย์และเอกสารบทที่ 1–3 เทียบกับโค้ดเดิมที่มีอยู่ | ตัดสินใจขอบเขตงาน และกำหนดให้ส่วน PLC เป็นส่วนเสริม ไม่ใช่ฟีเจอร์หลัก |
+| ออกแบบฐานข้อมูล | เขียน `schema.sql` พร้อม RLS, trigger และ constraint | _(เติมเอง เช่น รัน SQL บน Supabase จริง และทดลองสิทธิ์ของแต่ละ Role)_ |
+| เขียนโค้ด | หน้าเว็บทั้งหมด, Server Actions, Validation, PLC Gateway | _(เติมเอง เช่น อ่านและปรับส่วนใด ทดสอบหน้าไหนบ้าง)_ |
+| UI | ออกแบบตามแนว ISA-101 High-Performance HMI โดยใช้สีสดเฉพาะสถานะผิดปกติ และให้ทุกสถานะมีรูปทรงกำกับ | _(เติมเอง)_ |
+| ทดสอบและแก้บั๊ก | เขียน unit test 31 ข้อ, Gateway test 10 ข้อ, E2E 45 ข้อ และแก้บั๊กที่ตรวจพบ | _(เติมเอง เช่น รัน `npm test` และทดสอบบนเว็บจริงครบ 3 Role)_ |
+| ความปลอดภัย | ตรวจโค้ดซ้ำ 2 รอบ พบและแก้ปัญหา 10 จุด และอัปเกรด Next.js เป็น 16.3.5 เพื่อปิดช่องโหว่ | _(เติมเอง เช่น ปิด Allow new users to sign up และตรวจว่าไม่มี key หลุดขึ้น GitHub)_ |
+| CI / Deploy | เขียน GitHub Actions workflow และเรียบเรียงขั้นตอน deploy | ตั้งค่า Supabase, Vercel และ GitHub ด้วยตนเอง |
+
+**ตัวอย่างคำสั่งที่ใช้กับ AI**
+
+- ให้อ่านโจทย์และเอกสารประกอบการสอน แล้วเทียบกับโค้ดเดิมว่าต้องทำอะไรเพิ่ม
+- ให้สร้างระบบทั้งหมดตามขอบเขตที่ตกลงกัน
+- ให้ตรวจหาจุดบกพร่องในสิ่งที่เขียนไปแล้ว ซึ่งรอบนี้ทำให้พบปัญหาด้านสิทธิ์ที่มองไม่เห็นจากการใช้งานปกติ
 
 **ปัญหาที่พบระหว่างพัฒนา**
 
 1. React 19 รีเซ็ตฟอร์มหลัง Server Action ทำให้ข้อมูลที่กรอกหายเมื่อ validation ไม่ผ่าน แก้โดยส่งค่าที่กรอกกลับมาเป็น `defaultValue`
 2. ช่องเลือกสถานะ Alarm แบบ controlled ถูกรีเซ็ตเป็น "Open" ขณะที่ปุ่มยังแสดง "ปิด Alarm" ทำให้บันทึกผิดสถานะโดยไม่รู้ตัว E2E test จับได้ แก้เป็น uncontrolled select
 3. ค่า `NEXT_PUBLIC_*` ถูกฝังตอน build ถ้าตั้งค่าใน Vercel หลัง deploy ต้อง Redeploy
+4. Technician ที่เรียก Supabase API ตรง ๆ เคยปลอมชื่อผู้บันทึก/ผู้ปิด Alarm และแก้ Alarm ที่ปิดแล้วได้ แก้ด้วย trigger ที่บังคับให้ค่ามาจาก session และห้ามแก้ข้อมูลตั้งต้น (migration 003)
+5. PLC Gateway เคยหยุดทำงานถาวรเมื่อเครือข่ายหลุด แก้ให้ดักข้อผิดพลาดและลองใหม่รอบถัดไป
+6. Supabase ตัดผลลัพธ์ที่ 1,000 แถวโดยไม่แจ้งเตือน ทำให้ Export CSV และกราฟขาดข้อมูล แก้ด้วยการดึงข้อมูลทีละหน้า
+7. ผู้ใช้ที่ถูกสร้างก่อนรัน `schema.sql` จะไม่มีแถวใน `profiles` แล้วติด redirect วนไม่จบ แก้ด้วยหน้าแจ้งเตือนเฉพาะและ migration 004
+8. `npm audit` แจ้งช่องโหว่ระดับ critical ของ Next.js เรื่องการข้าม middleware จึงอัปเกรดเป็น 16.3.5 (ระบบยังปลอดภัยอยู่แล้วเพราะตรวจสิทธิ์ซ้ำที่ server และ RLS)
 
 **สิ่งที่ไม่ให้ AI ตัดสินใจแทน:** ขอบเขตงาน, สิทธิ์ของแต่ละ Role, การจัดเก็บ secret และการยืนยันว่าระบบบน Vercel ทำงานได้จริง
