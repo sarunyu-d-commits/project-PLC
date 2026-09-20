@@ -4,6 +4,8 @@ export type AlarmStatus = "open" | "in_progress" | "closed";
 export type AlarmSeverity = "low" | "medium" | "high";
 export type MaintenanceStatus = "pending" | "in_progress" | "waiting_part" | "done";
 export type MaintenanceType = "corrective" | "preventive";
+/** manual = บันทึกเอง, plc = จาก PLC Gateway, sim = จากหน้าจำลองเครื่องจักร */
+export type AlarmSource = "manual" | "plc" | "sim";
 
 export interface Profile {
   id: string;
@@ -33,7 +35,7 @@ export interface Alarm {
   cause: string | null;
   action_taken: string | null;
   status: AlarmStatus;
-  source: "manual" | "plc";
+  source: AlarmSource;
   closed_at: string | null;
   machine?: Pick<Machine, "machine_code" | "name"> | null;
   closer?: Pick<Profile, "full_name"> | null;

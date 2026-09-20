@@ -97,6 +97,7 @@ export default async function AlarmsPage(props: PageProps<"/alarms">) {
                     <td>
                       <Link href={`/alarms/${a.id}`} className="font-semibold underline underline-offset-2">{a.alarm_code}</Link>
                       {a.source === "plc" && <span className="ml-2 text-xs text-steel">PLC</span>}
+                      {a.source === "sim" && <span className="ml-2 text-xs text-steel">จำลอง</span>}
                       <span className="block text-sm">{a.description}</span>
                     </td>
                     <td className="text-sm">{a.cause ?? <span className="text-steel">–</span>}</td>

@@ -516,3 +516,22 @@ select u.id, coalesce(u.raw_user_meta_data ->> 'full_name', split_part(u.email, 
 from auth.users u
 where not exists (select 1 from public.profiles p where p.id = u.id)
 on conflict (id) do nothing;
+
+-- ---------------------------------------------------------------------
+-- 9. หน้าจำลองเครื่องจักร (เหมือน migrations/005_simulator.sql)
+-- ---------------------------------------------------------------------
+alter table public.alarms drop constraint if exists alarms_source_check;
+alter table public.alarms add constraint alarms_source_check
+  check (source in ('manual', 'plc', 'sim'));
+
+drop policy if exists "alarms: staff insert" on public.alarms;
+create policy "alarms: staff insert" on public.alarms
+  for insert to authenticated
+  with check (
+    public.is_staff()
+    and (source = 'manual' or (source = 'sim' and public.is_admin()))
+  );
+
+create unique index if not exists alarms_one_active_sim_alarm
+  on public.alarms (machine_id, alarm_code)
+  where source = 'sim' and status <> 'closed';

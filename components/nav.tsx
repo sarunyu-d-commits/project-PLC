@@ -9,6 +9,7 @@ const LINKS: { href: string; label: string; roles?: AppRole[] }[] = [
   { href: "/machines", label: "เครื่องจักร" },
   { href: "/alarms", label: "Alarm" },
   { href: "/maintenance", label: "งานซ่อมบำรุง" },
+  { href: "/simulator", label: "จำลองเครื่องจักร", roles: ["admin"] },
   { href: "/users", label: "ผู้ใช้งาน", roles: ["admin"] },
   { href: "/audit", label: "ประวัติการแก้ไข", roles: ["admin"] },
 ];

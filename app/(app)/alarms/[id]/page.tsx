@@ -31,7 +31,7 @@ export default async function AlarmDetailPage(props: PageProps<"/alarms/[id]">) 
     ["เกิดเมื่อ", formatDateTime(alarm.occurred_at)],
     ["ระดับ", <SeverityMark key="s" severity={alarm.severity} />],
     ["สถานะ", <AlarmStatusMark key="st" status={alarm.status} />],
-    ["ที่มา", alarm.source === "plc" ? "PLC Gateway" : `บันทึกโดย ${alarm.creator?.full_name ?? "–"}`],
+    ["ที่มา", alarm.source === "plc" ? "PLC Gateway" : alarm.source === "sim" ? `หน้าจำลองเครื่องจักร โดย ${alarm.creator?.full_name ?? "–"}` : `บันทึกโดย ${alarm.creator?.full_name ?? "–"}`],
     ["สาเหตุ", alarm.cause ?? "–"],
     ["การแก้ไข", alarm.action_taken ?? "–"],
     ["ปิดเมื่อ", alarm.closed_at ? `${formatDateTime(alarm.closed_at)} โดย ${alarm.closer?.full_name ?? "ระบบ"}` : "–"],

@@ -35,6 +35,7 @@
 - **Export CSV** ของ Alarm ตามตัวกรองที่เลือก (เปิดใน Excel ภาษาไทยได้)
 - **Audit Log** บันทึกทุกการเพิ่ม/แก้ไข/ลบ ด้วย trigger ในฐานข้อมูล
 - **Responsive UI** ใช้งานบนมือถือได้
+- **หน้าจำลองเครื่องจักร** (`/simulator`, Admin เท่านั้น) กดเดินเครื่อง หยุด เข้าซ่อม หรือจำลอง Fault ได้ทีละเครื่อง ใช้สาธิตระบบแทน PLC จริง Alarm ที่สร้างจะมีป้าย "จำลอง"
 - **PLC Gateway** รับสถานะเครื่องจาก Mitsubishi PLC / GX Simulator3 แล้วสร้าง Alarm อัตโนมัติ
 
 ## 3. เทคโนโลยี
@@ -137,7 +138,7 @@ audit_logs      เขียนโดย trigger เท่านั้น
 1. สร้าง Project ใหม่ที่ supabase.com
 2. เมนู **SQL Editor** วางเนื้อหา `supabase/schema.sql` แล้วกด Run
 3. (ถ้าต้องการข้อมูลตัวอย่าง) วาง `supabase/seed.sql` แล้วกด Run
-   > ถ้าเคยรัน `schema.sql` รุ่นก่อนไปแล้ว ไม่ต้องรันใหม่ทั้งไฟล์ ให้รันไฟล์ใน `supabase/migrations/` ที่ยังไม่เคยรันตามลำดับเลข (002, 003, 004)
+   > ถ้าเคยรัน `schema.sql` รุ่นก่อนไปแล้ว ไม่ต้องรันใหม่ทั้งไฟล์ ให้รันไฟล์ใน `supabase/migrations/` ที่ยังไม่เคยรันตามลำดับเลข (002, 003, 004, 005)
 4. **ปิดการสมัครสมาชิกเอง:** เมนู **Authentication > Sign In / Providers** ปิด **Allow new users to sign up** ถ้าไม่ปิด ใครก็สมัครผ่าน API ได้และจะได้สิทธิ์ Viewer ซึ่งอ่านข้อมูลทั้งระบบได้
 5. เมนู **Authentication > Users > Add user** สร้างผู้ใช้ (ติ๊ก Auto Confirm)
    > ถ้าสร้างผู้ใช้ไว้ก่อนรัน `schema.sql` ให้รัน `supabase/migrations/004_backfill_profiles.sql` ด้วย ไม่อย่างนั้นผู้ใช้นั้นจะเข้าหน้า "บัญชียังไม่ได้ตั้งค่าสิทธิ์"
@@ -187,7 +188,19 @@ npm run build       # Production build
 2. **gateway**: ตรวจ syntax และรัน unit test ของ Gateway
 3. **secrets-guard**: ล้มเหลวถ้ามีไฟล์ `.env` ถูก commit หรือมี Service Role Key ในโค้ดเว็บ
 
-### 6.6 PLC Gateway (ส่วนเสริม)
+### 6.6 หน้าจำลองเครื่องจักร
+
+ใช้สาธิตการทำงานของระบบโดยไม่ต้องมี PLC จริง (บทที่ 1 จัดการเชื่อม PLC จริงเป็น Out of Scope ของ Version แรก)
+
+1. Login ด้วยบัญชี Admin แล้วเลือกเมนู **จำลองเครื่องจักร**
+2. เลือกชนิด Fault แล้วกด **จำลอง Fault** ระบบจะสร้าง Alarm (แหล่งที่มา `sim`) และเครื่องเปลี่ยนเป็น Alarm
+3. กด **เข้าซ่อม** ได้แม้ Alarm ยังค้าง
+4. ปิด Alarm ที่หน้า Alarm (ต้องกรอกสาเหตุและการแก้ไข)
+5. กด **เดินเครื่อง** ได้เมื่อไม่มี Alarm ค้าง
+
+กติกา: เครื่องที่รับสถานะจาก PLC Gateway จำลองไม่ได้, Fault รหัสเดิมที่ยังไม่ปิดจำลองซ้ำไม่ได้, ทุกการเปลี่ยนสถานะถูกบันทึกใน Audit Log
+
+### 6.7 PLC Gateway (ส่วนเสริม)
 
 รันบนเครื่อง Windows ที่ติดตั้ง GX Works3 / MX Component หรือใช้ mock mode บนเครื่องใดก็ได้
 
@@ -222,10 +235,11 @@ curl -X POST localhost:8000/api/plc -H "X-API-Key: <PLC_API_KEY>" \
 
 | ระดับ | จำนวน | ครอบคลุม |
 |---|---|---|
-| Unit (Vitest) | 31 | Validation, กฎเปลี่ยนสถานะ Alarm, mapping PLC, กัน open redirect |
+| Unit (Vitest) | 37 | Validation, กฎเปลี่ยนสถานะ Alarm, mapping PLC, กัน open redirect, กติกาหน้าจำลอง |
 | Unit (Gateway) | 10 | สร้าง Alarm ครั้งเดียว, retry เมื่อเครือข่ายล่ม, ไม่หยุดทำงานเมื่อเน็ตหลุด, หยุดส่งเมื่อเลิกผูก PLC |
 | Database (SQL) | – | RLS ของแต่ละ Role, constraint, trigger, การปลอมข้อมูลผ่าน API |
 | End-to-end (Playwright) | 45 | Login/สิทธิ์ (รวมบัญชีที่ไม่มี profile), CRUD, เปิด Alarm ใหม่, ค้นหา, validation, ปิด Alarm, สถานะเครื่องตาม Alarm, งานซ่อม, CSV เกิน 1,000 แถว, มือถือ |
+| End-to-end หน้าจำลอง | 30 | สิทธิ์ (Technician/Viewer เข้าไม่ได้), เดิน/หยุด/เข้าซ่อม/Fault, กัน Fault ซ้ำ, ปิด Alarm แล้วเดินเครื่องต่อ, Audit Log, มือถือ |
 
 ตัวอย่าง Acceptance Criteria ที่ทดสอบ
 

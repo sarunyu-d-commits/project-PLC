@@ -83,7 +83,7 @@ export default async function MachineDetailPage(props: PageProps<"/machines/[id]
               {timeline.map((t) =>
                 t.kind === "alarm" ? (
                   <li key={`a-${t.alarm.id}`}>
-                    <p className="tabular text-sm text-steel">{formatDateTime(t.at)} {t.alarm.source === "plc" ? "Alarm จาก PLC" : "Alarm"}</p>
+                    <p className="tabular text-sm text-steel">{formatDateTime(t.at)} {t.alarm.source === "plc" ? "Alarm จาก PLC" : t.alarm.source === "sim" ? "Alarm จำลอง" : "Alarm"}</p>
                     <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
                       <Link href={`/alarms/${t.alarm.id}`} className="font-semibold underline-offset-2 hover:underline">{t.alarm.alarm_code}</Link>
                       <AlarmStatusMark status={t.alarm.status} />
