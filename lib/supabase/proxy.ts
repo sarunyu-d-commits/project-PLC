@@ -24,10 +24,11 @@ export async function updateSession(request: NextRequest) {
     },
   });
 
-  // ห้ามแทรกโค้ดระหว่าง createServerClient กับ getUser (ตามคำแนะนำของ @supabase/ssr)
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
+  // ห้ามแทรกโค้ดระหว่าง createServerClient กับ getClaims (ตามคำแนะนำของ @supabase/ssr)
+  // getClaims ตรวจลายเซ็น JWT ในเครื่องเมื่อโปรเจคใช้ JWT signing keys แบบใหม่ จึงไม่ต้องเรียก Auth server ทุก request
+  // ถ้าเป็นคีย์แบบเก่า (HS256) ไลบรารีจะเรียก getUser() ให้เองโดยอัตโนมัติ
+  const { data } = await supabase.auth.getClaims();
+  const user = data?.claims ?? null;
 
   const path = request.nextUrl.pathname;
   const isPublic = PUBLIC_PATHS.some((p) => path.startsWith(p));

@@ -9,28 +9,26 @@ import type { AppRole, Profile } from "@/lib/types";
  * proxy.ts เป็นแค่ด่านแรก (optimistic) — ทุกหน้า/ทุก action ต้องเรียกฟังก์ชันนี้อีกครั้ง
  * และ RLS ใน Supabase เป็นด่านสุดท้ายที่บังคับจริง
  */
-export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
+export const getSessionUserId = cache(async (): Promise<string | null> => {
   const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  if (!user) return null;
+  // ยืนยันตัวตนจาก JWT ที่ตรวจลายเซ็นแล้ว (ดูหมายเหตุใน lib/supabase/proxy.ts)
+  const { data, error } = await supabase.auth.getClaims();
+  if (error || !data?.claims?.sub) return null;
+  return data.claims.sub;
+});
 
+export const getCurrentProfile = cache(async (): Promise<Profile | null> => {
+  const userId = await getSessionUserId();
+  if (!userId) return null;
+
+  const supabase = await createClient();
   const { data } = await supabase
     .from("profiles")
     .select("id, full_name, role")
-    .eq("id", user.id)
+    .eq("id", userId)
     .single();
 
   return (data as Profile | null) ?? null;
-});
-
-export const getSessionUserId = cache(async (): Promise<string | null> => {
-  const supabase = await createClient();
-  const {
-    data: { user },
-  } = await supabase.auth.getUser();
-  return user?.id ?? null;
 });
 
 export async function requireProfile(): Promise<Profile> {

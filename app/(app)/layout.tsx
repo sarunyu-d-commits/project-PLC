@@ -5,12 +5,12 @@ import { createClient } from "@/lib/supabase/server";
 import { logout } from "@/app/login/actions";
 
 export default async function AppLayout({ children }: LayoutProps<"/">) {
-  const profile = await requireProfile();
   const supabase = await createClient();
-  const { count } = await supabase
-    .from("alarms")
-    .select("id", { count: "exact", head: true })
-    .eq("status", "open");
+  // ดึงข้อมูลผู้ใช้และจำนวน Alarm พร้อมกัน แทนการรอทีละขั้น
+  const [profile, { count }] = await Promise.all([
+    requireProfile(),
+    supabase.from("alarms").select("id", { count: "exact", head: true }).eq("status", "open"),
+  ]);
 
   return (
     <div className="md:grid md:min-h-dvh md:grid-cols-[14rem_1fr]">

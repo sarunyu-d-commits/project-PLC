@@ -179,6 +179,7 @@ npm run build       # Production build
 2. Vercel > **Add New Project** แล้วเลือก repo
 3. ใส่ Environment Variables 2 ตัวเดียวกับ `.env.local` **ก่อนกด Deploy** (ค่า `NEXT_PUBLIC_*` ถูกฝังตอน build ถ้าเพิ่มทีหลังต้องกด Redeploy)
 4. Supabase > **Authentication > URL Configuration** ใส่ Vercel URL เป็น Site URL
+5. **Region:** `vercel.json` ตั้งให้ server ของ Vercel อยู่ที่สิงคโปร์ (`sin1`) ให้ตรงกับ Supabase ที่อยู่สิงคโปร์ ถ้าไม่ตั้ง Vercel จะใช้ server ที่สหรัฐฯ ซึ่งทำให้ทุกการดึงข้อมูลต้องข้ามทวีปและเว็บช้า ถ้าสร้าง Supabase ไว้ region อื่น ให้แก้ค่านี้ให้ตรงกัน
 
 ### 6.5 GitHub Actions
 
