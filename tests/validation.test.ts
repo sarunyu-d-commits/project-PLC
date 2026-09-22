@@ -115,3 +115,14 @@ describe("pickUuid", () => {
     }
   });
 });
+
+describe("pickPage", () => {
+  it("accepts 1..1000 and falls back to page 1", async () => {
+    const { pickPage } = await import("@/lib/query");
+    expect(pickPage("3")).toBe(3);
+    expect(pickPage("1000")).toBe(1000);
+    for (const bad of ["0", "-2", "1001", "abc", "2.5", "", undefined, 7]) {
+      expect(pickPage(bad)).toBe(1);
+    }
+  });
+});

@@ -23,11 +23,12 @@ export type AlarmFilters = ReturnType<typeof parseAlarmFilters>;
 type Client = Awaited<ReturnType<typeof createClient>>;
 
 /** ใช้ร่วมกันระหว่างหน้า Alarm และการ Export CSV เพื่อให้ผลลัพธ์ตรงกัน */
-export function buildAlarmQuery(supabase: Client, f: AlarmFilters) {
+export function buildAlarmQuery(supabase: Client, f: AlarmFilters, opts: { count?: "exact" } = {}) {
   let query = supabase
     .from("alarms")
     .select(
       "id, alarm_code, description, severity, status, occurred_at, cause, action_taken, source, closed_at, machine_id, machine:machines(machine_code, name), closer:profiles!alarms_closed_by_fkey(full_name)",
+      opts.count ? { count: opts.count } : undefined,
     )
     .order("occurred_at", { ascending: false })
     .order("id"); // ลำดับคงที่ สำหรับการแบ่งหน้า

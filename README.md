@@ -22,7 +22,7 @@
 | Machine Master | CRUD ครบ (Admin), ฟิลด์ Machine ID, Name, Type, Location, Status (Running/Stop/Alarm/Maintenance) |
 | Alarm Record | Create / Read / Update, สถานะ Open, In Progress, Closed, บันทึกผู้ปิดและเวลาปิดอัตโนมัติ |
 | Maintenance Record | Create / Read / Update, อ้างอิง Alarm ได้, สถานะ รอดำเนินการ / กำลังซ่อม / รออะไหล่ / เสร็จแล้ว |
-| Search & Filter | เครื่องจักร: คำค้น, สถานะ, ประเภท, ตำแหน่ง<br>Alarm: คำค้น, เครื่อง, สถานะ, ความรุนแรง, ช่วงวันที่<br>งานซ่อม: คำค้น, เครื่อง, ช่าง, สถานะ, ประเภท, ช่วงวันที่ |
+| Search & Filter | เครื่องจักร: คำค้น, สถานะ, ประเภท, ตำแหน่ง<br>Alarm: คำค้น, เครื่อง, สถานะ, ความรุนแรง, ช่วงวันที่<br>งานซ่อม: คำค้น, เครื่อง, ช่าง, สถานะ, ประเภท, ช่วงวันที่<br>หน้า Alarm และงานซ่อมแบ่งหน้าละ 50 รายการ ลิงก์แต่ละหน้าแชร์ได้ |
 | Dashboard | จำนวนเครื่องทั้งหมดและแยกตามสถานะ, จำนวน Alarm และงานซ่อม, ผังเครื่องตามพื้นที่, กราฟ Alarm 7 วัน, เครื่องที่เกิด Alarm บ่อย |
 | Validation | ช่องจำเป็นห้ามว่าง, Machine ID ห้ามซ้ำและต้องตรงรูปแบบ, วันเวลา Alarm ห้ามอยู่ในอนาคต, ปิด Alarm ต้องมีสาเหตุและการแก้ไข, งานซ่อมที่เสร็จต้องมีการแก้ไข<br>ตรวจ 3 ชั้น: ฟอร์ม, Server Action, Database constraint |
 
@@ -237,11 +237,11 @@ curl -X POST localhost:8000/api/plc -H "X-API-Key: <PLC_API_KEY>" \
 
 | ระดับ | จำนวน | ครอบคลุม |
 |---|---|---|
-| Unit (Vitest) | 38 | Validation, กฎเปลี่ยนสถานะ Alarm, mapping PLC, กัน open redirect, กติกาหน้าจำลอง |
+| Unit (Vitest) | 39 | Validation, กฎเปลี่ยนสถานะ Alarm, mapping PLC, กัน open redirect, กติกาหน้าจำลอง |
 | Unit (Gateway) | 10 | สร้าง Alarm ครั้งเดียว, retry เมื่อเครือข่ายล่ม, ไม่หยุดทำงานเมื่อเน็ตหลุด, หยุดส่งเมื่อเลิกผูก PLC |
 | Database (SQL) | – | RLS ของแต่ละ Role, constraint, trigger, การปลอมข้อมูลผ่าน API |
 | End-to-end (Playwright) | 45 | Login/สิทธิ์ (รวมบัญชีที่ไม่มี profile), CRUD, เปิด Alarm ใหม่, ค้นหา, validation, ปิด Alarm, สถานะเครื่องตาม Alarm, งานซ่อม, CSV เกิน 1,000 แถว, มือถือ |
-| End-to-end หน้าจำลอง | 30 | สิทธิ์ (Technician/Viewer เข้าไม่ได้), เดิน/หยุด/เข้าซ่อม/Fault, กัน Fault ซ้ำ, ปิด Alarm แล้วเดินเครื่องต่อ, Audit Log, มือถือ |
+| End-to-end หน้าจำลองและส่วนที่เกี่ยวข้อง | 37 | สิทธิ์ (Technician/Viewer เข้าไม่ได้), เดิน/หยุด/เข้าซ่อม/Fault, กัน Fault ซ้ำ, ปิด Alarm แล้วเดินเครื่องต่อ, Audit Log, แบ่งหน้า, มือถือ |
 
 ตัวอย่าง Acceptance Criteria ที่ทดสอบ
 
@@ -251,10 +251,11 @@ curl -X POST localhost:8000/api/plc -H "X-API-Key: <PLC_API_KEY>" \
 
 ### ข้อจำกัดที่ทราบ
 
-- หน้ารายการแสดงสูงสุด 200 แถว (ยังไม่มีการแบ่งหน้า) ใช้ตัวกรองหรือ Export CSV เพื่อดูทั้งหมด
+- ไทม์ไลน์ในหน้ารายละเอียดเครื่องแสดง Alarm และงานซ่อมอย่างละ 50 รายการล่าสุด (มีลิงก์ไปดูทั้งหมด)
 - Export CSV สูงสุด 50,000 แถวต่อครั้ง
 - Gateway รองรับเครื่องละหนึ่ง process ถ้ามีหลายเครื่อง ให้รันหลาย instance ด้วย `.env` คนละชุด
 - ผู้ใช้ใหม่ต้องสร้างใน Supabase Dashboard ยังไม่มีหน้าสร้างผู้ใช้ในเว็บ
+- ข้อมูลตัวอย่างตั้งทุกเครื่องเป็น `plc_linked = false` เพื่อให้สาธิตผ่านหน้าจำลองได้ทันที ถ้าจะต่อ PLC Gateway จริง ให้ติ๊ก "รับสถานะจาก PLC Gateway" ที่หน้าแก้ไขเครื่องจักรก่อน
 
 ## 8. Screenshots
 

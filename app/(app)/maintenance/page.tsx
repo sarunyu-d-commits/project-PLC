@@ -2,12 +2,13 @@ import Link from "next/link";
 import { createMaintenance } from "./actions";
 import { MaintenanceForm } from "./maintenance-form";
 import { FilterBar, FilterField } from "@/components/filter-bar";
+import { PAGE_SIZE, Pagination } from "@/components/pagination";
 import { EmptyState, PageHeader, Panel } from "@/components/page-header";
 import { MaintStatusMark } from "@/components/status";
 import { isStaff, requireProfile } from "@/lib/auth";
 import { formatDateTime, MAINT_STATUS_LABEL, MAINT_TYPE_LABEL } from "@/lib/labels";
 import { loadMaintenanceOptions } from "@/lib/options";
-import { cleanSearch, pickDate, pickEnum, pickUuid } from "@/lib/query";
+import { cleanSearch, pickDate, pickEnum, pickPage, pickUuid } from "@/lib/query";
 import { createClient } from "@/lib/supabase/server";
 import type { MaintenanceRecord, MaintenanceStatus, MaintenanceType } from "@/lib/types";
 
@@ -28,15 +29,18 @@ export default async function MaintenancePage(props: PageProps<"/maintenance">) 
     to: pickDate(sp.to),
   };
   const prefillAlarm = pickUuid(sp.alarm);
+  const page = pickPage(sp.page);
+  const fromRow = (page - 1) * PAGE_SIZE;
 
   const supabase = await createClient();
   let query = supabase
     .from("maintenance_records")
     .select(
       "id, machine_id, alarm_id, technician_id, maintenance_type, problem, action_taken, status, started_at, completed_at, machine:machines(machine_code, name), technician:profiles!maintenance_records_technician_id_fkey(full_name)",
+      { count: "exact" },
     )
     .order("started_at", { ascending: false })
-    .limit(200);
+    .order("id");
   if (f.q) query = query.or(`problem.ilike.%${f.q}%,action_taken.ilike.%${f.q}%`);
   if (f.machine) query = query.eq("machine_id", f.machine);
   if (f.technician === "none") query = query.is("technician_id", null);
@@ -47,9 +51,13 @@ export default async function MaintenancePage(props: PageProps<"/maintenance">) 
   if (f.from) query = query.gte("started_at", `${f.from}T00:00:00+07:00`);
   if (f.to) query = query.lte("started_at", `${f.to}T23:59:59.999+07:00`);
 
-  const [{ data, error }, options] = await Promise.all([query, loadMaintenanceOptions(supabase, { alarmId: prefillAlarm })]);
+  const [{ data, error, count }, options] = await Promise.all([
+    query.range(fromRow, fromRow + PAGE_SIZE - 1),
+    loadMaintenanceOptions(supabase, { alarmId: prefillAlarm }),
+  ]);
   const records = (data ?? []) as unknown as MaintenanceRecord[];
   const activeCount = Object.values(f).filter(Boolean).length;
+  const filterParams = Object.fromEntries(Object.entries(f).filter(([, v]) => v)) as Record<string, string>;
 
   return (
     <>
@@ -130,7 +138,7 @@ export default async function MaintenancePage(props: PageProps<"/maintenance">) 
                 ))}
               </tbody>
             </table>
-            <p className="mt-3 text-sm text-steel">แสดง {records.length} รายการ</p>
+            <Pagination basePath="/maintenance" params={filterParams} page={page} total={count ?? 0} shown={records.length} />
           </div>
         )}
       </Panel>

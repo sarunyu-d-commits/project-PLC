@@ -1,11 +1,13 @@
 import Link from "next/link";
 import { AlarmCreateForm } from "./alarm-create-form";
 import { FilterBar, FilterField } from "@/components/filter-bar";
+import { PAGE_SIZE, Pagination } from "@/components/pagination";
 import { EmptyState, PageHeader, Panel } from "@/components/page-header";
 import { AlarmStatusMark, SeverityMark } from "@/components/status";
 import { isStaff, requireProfile } from "@/lib/auth";
 import { ALARM_STATUSES, buildAlarmQuery, parseAlarmFilters, SEVERITIES } from "@/lib/alarm-query";
 import { ALARM_STATUS_LABEL, formatDateTime, SEVERITY_LABEL } from "@/lib/labels";
+import { pickPage } from "@/lib/query";
 import { createClient } from "@/lib/supabase/server";
 import type { Alarm } from "@/lib/types";
 
@@ -13,17 +15,20 @@ export default async function AlarmsPage(props: PageProps<"/alarms">) {
   const profile = await requireProfile();
   const sp = await props.searchParams;
   const f = parseAlarmFilters(sp);
+  const page = pickPage(sp.page);
+  const fromRow = (page - 1) * PAGE_SIZE;
 
   const supabase = await createClient();
-  const [{ data, error }, { data: machines }] = await Promise.all([
-    buildAlarmQuery(supabase, f).limit(200),
+  const [{ data, error, count }, { data: machines }] = await Promise.all([
+    buildAlarmQuery(supabase, f, { count: "exact" }).range(fromRow, fromRow + PAGE_SIZE - 1),
     supabase.from("machines").select("id, machine_code, name").order("machine_code"),
   ]);
   const alarms = (data ?? []) as unknown as Alarm[];
   const activeCount = Object.values(f).filter(Boolean).length;
-  const exportQuery = new URLSearchParams(
-    Object.entries(f).filter(([, v]) => v) as [string, string][],
-  ).toString();
+  const filterParams = Object.fromEntries(
+    Object.entries(f).filter(([, v]) => v),
+  ) as Record<string, string>;
+  const exportQuery = new URLSearchParams(filterParams).toString();
 
   return (
     <>
@@ -112,9 +117,7 @@ export default async function AlarmsPage(props: PageProps<"/alarms">) {
                 ))}
               </tbody>
             </table>
-            <p className="mt-3 text-sm text-steel">
-              แสดง {alarms.length} รายการ{alarms.length === 200 ? " (สูงสุด 200 รายการ ใช้ตัวกรองเพื่อจำกัดผล)" : ""}
-            </p>
+            <Pagination basePath="/alarms" params={filterParams} page={page} total={count ?? 0} shown={alarms.length} />
           </div>
         )}
       </Panel>

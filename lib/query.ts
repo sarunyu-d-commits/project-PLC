@@ -4,6 +4,12 @@ export function cleanSearch(value: unknown): string {
   return value.replace(/[,()%*\\]/g, " ").trim().slice(0, 50);
 }
 
+/** เลขหน้า 1..1000 (ค่าที่ผิดรูปแบบถือเป็นหน้า 1) */
+export function pickPage(value: unknown): number {
+  const n = typeof value === "string" ? Number(value) : NaN;
+  return Number.isInteger(n) && n >= 1 && n <= 1000 ? n : 1;
+}
+
 export function pickString(value: unknown): string {
   return typeof value === "string" ? value : "";
 }

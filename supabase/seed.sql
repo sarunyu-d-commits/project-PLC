@@ -1,6 +1,8 @@
 -- ข้อมูลตัวอย่าง (รันหลัง schema.sql) — ไม่มีข้อมูลผู้ใช้ เพราะผู้ใช้สร้างผ่าน Supabase Auth
 insert into public.machines (machine_code, name, machine_type, location, status, plc_linked) values
-  ('PUMP-01',  'Transfer Pump 1',        'Pump',       'Line A', 'running', true),
+  -- plc_linked = false ทุกเครื่อง เพื่อให้สาธิตผ่านหน้าจำลองได้ทันทีโดยไม่ต้องรัน PLC Gateway
+  -- ถ้าจะต่อ Gateway จริง ให้ติ๊ก "รับสถานะจาก PLC Gateway" ที่หน้าแก้ไขเครื่องจักร
+  ('PUMP-01',  'Transfer Pump 1',        'Pump',       'Line A', 'running', false),
   ('CNC-01',   'CNC Lathe Okuma',        'CNC',        'Line A', 'running', false),
   ('CNC-02',   'CNC Milling Mazak',      'CNC',        'Line A', 'maintenance', false),
   ('PRS-01',   'Hydraulic Press 200T',   'Press',      'Line B', 'alarm', false),

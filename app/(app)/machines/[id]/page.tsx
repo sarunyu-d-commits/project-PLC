@@ -19,21 +19,26 @@ export default async function MachineDetailPage(props: PageProps<"/machines/[id]
   if (!id) notFound();
 
   const supabase = await createClient();
-  const [machineRes, alarmsRes, maintRes] = await Promise.all([
+  const HISTORY_LIMIT = 50;
+  const [machineRes, alarmsRes, maintRes, alarmCountRes, maintCountRes] = await Promise.all([
     supabase.from("machines").select("*").eq("id", id).maybeSingle(),
     supabase
       .from("alarms")
       .select("id, alarm_code, description, severity, status, occurred_at, closed_at, source")
       .eq("machine_id", id)
       .order("occurred_at", { ascending: false })
-      .limit(50),
+      .limit(HISTORY_LIMIT),
     supabase
       .from("maintenance_records")
       .select("id, maintenance_type, problem, action_taken, status, started_at, completed_at, technician:profiles!maintenance_records_technician_id_fkey(full_name)")
       .eq("machine_id", id)
       .order("started_at", { ascending: false })
-      .limit(50),
+      .limit(HISTORY_LIMIT),
+    supabase.from("alarms").select("id", { count: "exact", head: true }).eq("machine_id", id),
+    supabase.from("maintenance_records").select("id", { count: "exact", head: true }).eq("machine_id", id),
   ]);
+  const alarmTotal = alarmCountRes.count ?? 0;
+  const maintTotal = maintCountRes.count ?? 0;
 
   const machine = machineRes.data as Machine | null;
   if (!machine) notFound();
@@ -62,8 +67,8 @@ export default async function MachineDetailPage(props: PageProps<"/machines/[id]
 
       <dl className="mb-6 flex flex-wrap gap-x-10 gap-y-3 border border-line bg-surface px-4 py-3">
         <div><dt className="text-sm text-steel">สถานะ</dt><dd className="text-lg"><MachineStatusMark status={machine.status} /></dd></div>
-        <div><dt className="text-sm text-steel">Alarm ทั้งหมด</dt><dd className="tabular text-lg font-semibold">{alarms.length}</dd></div>
-        <div><dt className="text-sm text-steel">งานซ่อมทั้งหมด</dt><dd className="tabular text-lg font-semibold">{maint.length}</dd></div>
+        <div><dt className="text-sm text-steel">Alarm ทั้งหมด</dt><dd className="tabular text-lg font-semibold">{alarmTotal}</dd></div>
+        <div><dt className="text-sm text-steel">งานซ่อมทั้งหมด</dt><dd className="tabular text-lg font-semibold">{maintTotal}</dd></div>
         <div>
           <dt className="text-sm text-steel">แหล่งสถานะ</dt>
           <dd className="text-lg">
@@ -103,6 +108,14 @@ export default async function MachineDetailPage(props: PageProps<"/machines/[id]
                 ),
               )}
             </ol>
+          )}
+          {(alarmTotal > alarms.length || maintTotal > maint.length) && (
+            <p className="mt-4 border-t border-line pt-3 text-sm text-steel">
+              แสดง Alarm และงานซ่อมอย่างละไม่เกิน {HISTORY_LIMIT} รายการล่าสุด{" "}
+              <Link href={`/alarms?machine=${machine.id}`} className="underline underline-offset-2">ดู Alarm ทั้งหมด</Link>
+              {" · "}
+              <Link href={`/maintenance?machine=${machine.id}`} className="underline underline-offset-2">ดูงานซ่อมทั้งหมด</Link>
+            </p>
           )}
         </Panel>
 
