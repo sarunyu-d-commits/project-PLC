@@ -535,3 +535,36 @@ create policy "alarms: staff insert" on public.alarms
 create unique index if not exists alarms_one_active_sim_alarm
   on public.alarms (machine_id, alarm_code)
   where source = 'sim' and status <> 'closed';
+
+-- ---------------------------------------------------------------------
+-- 10. กันสถานะเครื่องขัดกับ Alarm ที่ค้าง (เหมือน migrations/006_machine_status_guard.sql)
+-- ---------------------------------------------------------------------
+create or replace function public.machine_status_guard()
+returns trigger
+language plpgsql
+security definer
+set search_path = public
+as $$
+begin
+  if auth.uid() is null or new.plc_linked then
+    return new;
+  end if;
+
+  if new.status in ('running', 'stop')
+     and new.status is distinct from old.status
+     and exists (
+       select 1 from public.alarms
+       where machine_id = new.id and status <> 'closed'
+     ) then
+    raise exception 'machine has open alarms' using errcode = '23514';
+  end if;
+
+  return new;
+end $$;
+
+revoke execute on function public.machine_status_guard() from public, anon, authenticated;
+
+drop trigger if exists trg_machine_status_guard on public.machines;
+create trigger trg_machine_status_guard
+  before update of status on public.machines
+  for each row execute function public.machine_status_guard();

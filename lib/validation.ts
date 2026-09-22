@@ -139,6 +139,8 @@ export function dbErrorMessage(error: { code?: string; message?: string }): stri
       return "ลบไม่ได้ เพราะเครื่องนี้มีประวัติ Alarm หรืองานซ่อมอยู่";
     case "23514":
       if (msg.includes("admin")) return "ต้องมี Admin อย่างน้อย 1 คนในระบบ";
+      if (msg.includes("open alarms"))
+        return "เครื่องนี้มี Alarm ที่ยังไม่ปิด ตั้งสถานะเป็น Running หรือ Stop ไม่ได้ ให้ปิด Alarm ก่อน";
       return "ข้อมูลไม่ผ่านเงื่อนไขของระบบ";
     case "42501":
       return "คุณไม่มีสิทธิ์ทำรายการนี้";

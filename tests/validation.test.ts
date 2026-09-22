@@ -105,3 +105,13 @@ describe("withValues", () => {
     expect(withValues({ ok: true }, fd).values).toBeUndefined();
   });
 });
+
+describe("pickUuid", () => {
+  it("accepts a real uuid and rejects look-alikes", async () => {
+    const { pickUuid } = await import("@/lib/query");
+    expect(pickUuid("3f1c2a4e-8b7d-4c6a-9e5f-1a2b3c4d5e6f")).toBe("3f1c2a4e-8b7d-4c6a-9e5f-1a2b3c4d5e6f");
+    for (const bad of ["-".repeat(36), "3f1c2a4e8b7d4c6a9e5f1a2b3c4d5e6f", "zzzzzzzz-8b7d-4c6a-9e5f-1a2b3c4d5e6f", "", 42]) {
+      expect(pickUuid(bad)).toBe("");
+    }
+  });
+});

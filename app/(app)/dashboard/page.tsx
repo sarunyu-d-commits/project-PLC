@@ -18,7 +18,7 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
 
   const week = lastSevenDays();
 
-  const [machinesRes, activeAlarmsRes, weekAlarmsRes, alarmTotalRes, maintActiveRes, maintWaitingRes, maintTotalRes] =
+  const [machinesRes, activeAlarmsRes, weekAlarmsRes, alarmTotalRes, alarmActiveRes, alarmOpenRes, maintActiveRes, maintWaitingRes, maintTotalRes] =
     await Promise.all([
       supabase
         .from("machines")
@@ -35,6 +35,8 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
         supabase.from("alarms").select("occurred_at, machine_id").gte("occurred_at", week.since).order("id").range(from, to),
       ),
       supabase.from("alarms").select("id", { count: "exact", head: true }),
+      supabase.from("alarms").select("id", { count: "exact", head: true }).neq("status", "closed"),
+      supabase.from("alarms").select("id", { count: "exact", head: true }).eq("status", "open"),
       supabase.from("maintenance_records").select("id", { count: "exact", head: true }).neq("status", "done"),
       supabase.from("maintenance_records").select("id", { count: "exact", head: true }).eq("status", "waiting_part"),
       supabase.from("maintenance_records").select("id", { count: "exact", head: true }),
@@ -66,7 +68,8 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
     .slice(0, 5)
     .map(([id, n]) => ({ machine: machines.find((m) => m.id === id), n }));
 
-  const openCount = activeAlarms.filter((a) => a.status === "open").length;
+  const activeCount = alarmActiveRes.count ?? 0;
+  const openCount = alarmOpenRes.count ?? 0;
 
   return (
     <>
@@ -149,7 +152,7 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
       </section>
 
       <div className="grid grid-cols-1 gap-6 xl:grid-cols-[3fr_2fr]">
-        <Panel title={`Alarm ที่ยังไม่ปิด (${activeAlarms.length}${openCount ? `, ยังไม่มีคนรับ ${openCount}` : ""})`}>
+        <Panel title={`Alarm ที่ยังไม่ปิด ${activeCount} รายการ${openCount ? ` (ยังไม่มีคนรับ ${openCount})` : ""}`}>
           {activeAlarms.length === 0 ? (
             <EmptyState>ไม่มี Alarm ค้าง</EmptyState>
           ) : (
@@ -181,6 +184,12 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
                   ))}
                 </tbody>
               </table>
+              {activeCount > activeAlarms.length && (
+                <p className="mt-3 text-sm text-steel">
+                  แสดง {activeAlarms.length} รายการล่าสุด{" "}
+                  <Link href="/alarms?status=active" className="underline underline-offset-2">ดูทั้งหมด</Link>
+                </p>
+              )}
             </div>
           )}
         </Panel>

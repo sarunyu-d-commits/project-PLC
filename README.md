@@ -116,6 +116,7 @@ audit_logs      เขียนโดย trigger เท่านั้น
 - Gateway สร้าง Alarm ซ้ำขณะที่ Alarm เดิมยังไม่ปิดไม่ได้ (partial unique index)
 - ผู้ใช้ใหม่ได้ Role Viewer อัตโนมัติ
 - ผู้บันทึกและผู้ปิด Alarm มาจากบัญชีที่ Login เสมอ แก้หรือปลอมผ่าน API ไม่ได้ ข้อมูลตั้งต้นของ Alarm (เครื่อง, รหัส, เวลาเกิด, แหล่งที่มา) แก้ไม่ได้หลังบันทึก และ Alarm ที่ปิดแล้วต้องให้ Admin เปิดใหม่ก่อนจึงแก้ได้
+- ตั้งเครื่องเป็น Running หรือ Stop ไม่ได้ขณะยังมี Alarm ค้าง (ยกเว้นเครื่องที่รับสถานะจาก PLC Gateway)
 - **สถานะเครื่องตาม Alarm:** มี Alarm ที่ยังไม่ปิด เครื่องเป็น Alarm, ปิด Alarm ตัวสุดท้ายแล้วเครื่องเป็น Stop (ไม่กลับเป็น Running เอง เพื่อให้คนยืนยันก่อนเดินเครื่อง) ยกเว้นเครื่องที่รับสถานะจาก PLC
 
 ### สิทธิ์ตาม Role (RLS)
@@ -138,7 +139,7 @@ audit_logs      เขียนโดย trigger เท่านั้น
 1. สร้าง Project ใหม่ที่ supabase.com
 2. เมนู **SQL Editor** วางเนื้อหา `supabase/schema.sql` แล้วกด Run
 3. (ถ้าต้องการข้อมูลตัวอย่าง) วาง `supabase/seed.sql` แล้วกด Run
-   > ถ้าเคยรัน `schema.sql` รุ่นก่อนไปแล้ว ไม่ต้องรันใหม่ทั้งไฟล์ ให้รันไฟล์ใน `supabase/migrations/` ที่ยังไม่เคยรันตามลำดับเลข (002, 003, 004, 005)
+   > ถ้าเคยรัน `schema.sql` รุ่นก่อนไปแล้ว ไม่ต้องรันใหม่ทั้งไฟล์ ให้รันไฟล์ใน `supabase/migrations/` ที่ยังไม่เคยรันตามลำดับเลข (002, 003, 004, 005, 006)
 4. **ปิดการสมัครสมาชิกเอง:** เมนู **Authentication > Sign In / Providers** ปิด **Allow new users to sign up** ถ้าไม่ปิด ใครก็สมัครผ่าน API ได้และจะได้สิทธิ์ Viewer ซึ่งอ่านข้อมูลทั้งระบบได้
 5. เมนู **Authentication > Users > Add user** สร้างผู้ใช้ (ติ๊ก Auto Confirm)
    > ถ้าสร้างผู้ใช้ไว้ก่อนรัน `schema.sql` ให้รัน `supabase/migrations/004_backfill_profiles.sql` ด้วย ไม่อย่างนั้นผู้ใช้นั้นจะเข้าหน้า "บัญชียังไม่ได้ตั้งค่าสิทธิ์"
@@ -236,7 +237,7 @@ curl -X POST localhost:8000/api/plc -H "X-API-Key: <PLC_API_KEY>" \
 
 | ระดับ | จำนวน | ครอบคลุม |
 |---|---|---|
-| Unit (Vitest) | 37 | Validation, กฎเปลี่ยนสถานะ Alarm, mapping PLC, กัน open redirect, กติกาหน้าจำลอง |
+| Unit (Vitest) | 38 | Validation, กฎเปลี่ยนสถานะ Alarm, mapping PLC, กัน open redirect, กติกาหน้าจำลอง |
 | Unit (Gateway) | 10 | สร้าง Alarm ครั้งเดียว, retry เมื่อเครือข่ายล่ม, ไม่หยุดทำงานเมื่อเน็ตหลุด, หยุดส่งเมื่อเลิกผูก PLC |
 | Database (SQL) | – | RLS ของแต่ละ Role, constraint, trigger, การปลอมข้อมูลผ่าน API |
 | End-to-end (Playwright) | 45 | Login/สิทธิ์ (รวมบัญชีที่ไม่มี profile), CRUD, เปิด Alarm ใหม่, ค้นหา, validation, ปิด Alarm, สถานะเครื่องตาม Alarm, งานซ่อม, CSV เกิน 1,000 แถว, มือถือ |
