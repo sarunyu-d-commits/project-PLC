@@ -27,7 +27,10 @@ export function MachinePanel({ machine, openAlarms }: {
   const faultId = `fault-${machine.id}`;
 
   return (
-    <article className={`flex flex-col gap-3 border p-4 ${tone}`} aria-labelledby={`title-${machine.id}`}>
+    <article
+      className={`flex flex-col gap-3 rounded-card border p-4 shadow-card ${tone}`}
+      aria-labelledby={`title-${machine.id}`}
+    >
       <header>
         <h3 id={`title-${machine.id}`} className="tabular text-lg font-semibold leading-tight">
           {machine.machine_code}

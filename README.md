@@ -257,13 +257,24 @@ curl -X POST localhost:8000/api/plc -H "X-API-Key: <PLC_API_KEY>" \
 - ผู้ใช้ใหม่ต้องสร้างใน Supabase Dashboard ยังไม่มีหน้าสร้างผู้ใช้ในเว็บ
 - ข้อมูลตัวอย่างตั้งทุกเครื่องเป็น `plc_linked = false` เพื่อให้สาธิตผ่านหน้าจำลองได้ทันที ถ้าจะต่อ PLC Gateway จริง ให้ติ๊ก "รับสถานะจาก PLC Gateway" ที่หน้าแก้ไขเครื่องจักรก่อน
 
-## 8. Screenshots
+## 8. หน้าตาระบบ
+
+**แนวทางออกแบบ**
+
+- ยึดแนว **ISA-101 High-Performance HMI** พื้นที่ข้อมูลเป็นโทนเทากลาง ไม่แสบตาเมื่อต้องเฝ้าจอนาน ๆ และเก็บสีสดไว้ให้สถานะผิดปกติ (Alarm สีแดง, Maintenance สีเหลืองอำพัน) เท่านั้น
+- ทุกสถานะมี **รูปทรงกำกับคู่กับสี** (วงกลม = Running, สี่เหลี่ยม = Stop, สามเหลี่ยม = Alarm, ข้าวหลามตัด = Maintenance) จึงอ่านได้แม้ตาบอดสีหรือพิมพ์ขาวดำ
+- แยก **ส่วนควบคุม** (แถบเมนู โทนเข้ม) ออกจาก **พื้นที่ข้อมูล** (โทนสว่าง) ให้สายตาจับได้ทันทีว่าส่วนไหนคือเนื้อหา
+- ตัวเลขทุกจุดใช้ตัวเลขความกว้างเท่ากัน (tabular figures) คอลัมน์จึงไม่ขยับเวลาค่าเปลี่ยน
+- การ์ด ปุ่ม และช่องกรอกใช้มุมโค้งและเงาชุดเดียวกันทั้งระบบ กำหนดเป็นตัวแปรไว้ที่ `app/globals.css` ที่เดียว
+- รองรับ `prefers-reduced-motion` การกะพริบของ Alarm และ animation ทั้งหมดจะหยุดให้อัตโนมัติ
 
 | | |
 |---|---|
 | ![Login](docs/screenshots/01-login.png) | ![Dashboard](docs/screenshots/02-dashboard-admin.png) |
 | ![Machine history](docs/screenshots/04-machine-history.png) | ![Alarms](docs/screenshots/09-alarms.png) |
 | ![Close alarm validation](docs/screenshots/07-alarm-close-error.png) | ![Maintenance](docs/screenshots/08-maintenance.png) |
+| ![Users](docs/screenshots/05-users.png) | ![Simulator](docs/screenshots/11-simulator.png) |
+| ![Audit log](docs/screenshots/06-audit.png) | ![Mobile](docs/screenshots/10-dashboard-mobile-viewer.png) |
 
 > ภาพชุดนี้ถ่ายจากการทดสอบในเครื่อง ควรถ่ายใหม่จากเว็บที่ deploy จริงก่อนส่งงาน
 
@@ -278,7 +289,7 @@ curl -X POST localhost:8000/api/plc -H "X-API-Key: <PLC_API_KEY>" \
 | วิเคราะห์ Requirement | สรุปโจทย์และเอกสารบทที่ 1–3 เทียบกับโค้ดเดิมที่มีอยู่ | ตัดสินใจขอบเขตงาน และกำหนดให้ส่วน PLC เป็นส่วนเสริม ไม่ใช่ฟีเจอร์หลัก |
 | ออกแบบฐานข้อมูล | เขียน `schema.sql` พร้อม RLS, trigger และ constraint | _(เติมเอง เช่น รัน SQL บน Supabase จริง และทดลองสิทธิ์ของแต่ละ Role)_ |
 | เขียนโค้ด | หน้าเว็บทั้งหมด, Server Actions, Validation, PLC Gateway | _(เติมเอง เช่น อ่านและปรับส่วนใด ทดสอบหน้าไหนบ้าง)_ |
-| UI | ออกแบบตามแนว ISA-101 High-Performance HMI โดยใช้สีสดเฉพาะสถานะผิดปกติ และให้ทุกสถานะมีรูปทรงกำกับ | _(เติมเอง)_ |
+| UI | ออกแบบตามแนว ISA-101 High-Performance HMI ใช้สีสดเฉพาะสถานะผิดปกติ ทุกสถานะมีรูปทรงกำกับ และจัดชุดสี/มุมโค้ง/เงาเป็นตัวแปรกลางที่ `globals.css` | _(เติมเอง)_ |
 | ทดสอบและแก้บั๊ก | เขียน unit test 31 ข้อ, Gateway test 10 ข้อ, E2E 45 ข้อ และแก้บั๊กที่ตรวจพบ | _(เติมเอง เช่น รัน `npm test` และทดสอบบนเว็บจริงครบ 3 Role)_ |
 | ความปลอดภัย | ตรวจโค้ดซ้ำ 2 รอบ พบและแก้ปัญหา 10 จุด และอัปเกรด Next.js เป็น 16.3.5 เพื่อปิดช่องโหว่ | _(เติมเอง เช่น ปิด Allow new users to sign up และตรวจว่าไม่มี key หลุดขึ้น GitHub)_ |
 | CI / Deploy | เขียน GitHub Actions workflow และเรียบเรียงขั้นตอน deploy | ตั้งค่า Supabase, Vercel และ GitHub ด้วยตนเอง |

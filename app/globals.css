@@ -2,24 +2,40 @@
 
 /*
   แนวทาง: ISA-101 High-Performance HMI
-  - สภาวะปกติเป็นโทนเทา ไม่แย่งความสนใจ
+  - พื้นที่แสดงข้อมูลเป็นโทนเทากลาง ไม่แย่งความสนใจและไม่แสบตา
   - สีอิ่มตัวสงวนไว้ให้สภาวะผิดปกติเท่านั้น (Alarm / Maintenance)
   - สถานะทุกตัวมีรูปทรงกำกับ ไม่พึ่งสีอย่างเดียว
+  - ส่วนควบคุม (แถบเมนูด้านข้าง) ใช้โทนเข้ม เพื่อแยกออกจากพื้นที่ข้อมูลอย่างชัดเจน
 */
 @theme {
-  --color-panel: #d9dcd8;
-  --color-surface: #eef0ec;
-  --color-well: #e4e7e2;
-  --color-ink: #1c2429;
-  --color-steel: #4f5c64;
-  --color-line: #b4bbb6;
-  --color-run: #3b7556;
-  --color-stop: #6f7a80;
+  /* แถบเมนู/ส่วนควบคุม */
+  --color-shell: #1b242c;
+  --color-shell-hi: #27323b;
+  --color-shell-ink: #e8edf0;
+  --color-shell-dim: #9dabb5;
+
+  /* พื้นที่ข้อมูล */
+  --color-panel: #dfe3e6;
+  --color-surface: #fafbfc;
+  --color-well: #eef1f3;
+  --color-ink: #16202a;
+  --color-steel: #58666f;
+  --color-line: #ccd3d8;
+
+  /* สถานะ */
+  --color-run: #2e7d55;
+  --color-stop: #6b767d;
   --color-alarm: #c0222b;
-  --color-alarm-wash: #f6dcdd;
-  --color-maint: #b87a0c;
-  --color-maint-wash: #f3e6c8;
+  --color-alarm-wash: #fbe4e5;
+  --color-maint: #a9730b;
+  --color-maint-wash: #f7ecd2;
   --color-focus: #1f5fbf;
+
+  --radius-card: 8px;
+  --radius-control: 6px;
+
+  --shadow-card: 0 1px 2px rgb(22 32 42 / 0.07), 0 1px 1px rgb(22 32 42 / 0.04);
+  --shadow-raised: 0 6px 16px rgb(22 32 42 / 0.12);
 
   --font-sans: "IBM Plex Sans Thai", "Noto Sans Thai", "Leelawadee UI", system-ui, sans-serif;
 }
@@ -44,6 +60,7 @@ body {
 :focus-visible {
   outline: 2px solid var(--color-focus);
   outline-offset: 2px;
+  border-radius: 2px;
 }
 
 /* ช่องกรอกข้อมูลแบบ HMI: ฝังลงไปในแผง */
@@ -51,11 +68,22 @@ body {
   width: 100%;
   border: 1px solid var(--color-line);
   background: #fff;
-  border-radius: 3px;
+  border-radius: var(--radius-control);
   padding: 0.45rem 0.6rem;
   font: inherit;
   color: inherit;
-  box-shadow: inset 0 1px 1px rgb(28 36 41 / 0.08);
+  box-shadow: inset 0 1px 2px rgb(22 32 42 / 0.06);
+  transition: border-color 120ms ease, box-shadow 120ms ease;
+}
+.input:hover:not(:disabled) {
+  border-color: #aeb8bf;
+}
+.input:focus-visible {
+  outline-offset: 0;
+  border-color: var(--color-focus);
+}
+.input::placeholder {
+  color: #93a1a9;
 }
 .input[aria-invalid="true"] {
   border-color: var(--color-alarm);
@@ -71,57 +99,104 @@ body {
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
-  border-radius: 3px;
-  padding: 0.45rem 0.95rem;
+  min-height: 2.25rem;
+  border-radius: var(--radius-control);
+  padding: 0.4rem 0.95rem;
   font-weight: 600;
   border: 1px solid var(--color-ink);
   background: var(--color-ink);
   color: #fff;
   cursor: pointer;
   white-space: nowrap;
+  box-shadow: var(--shadow-card);
+  transition: background-color 120ms ease, border-color 120ms ease, color 120ms ease,
+    box-shadow 120ms ease, transform 60ms ease;
+}
+.btn:hover:not(:disabled) {
+  background: #24313d;
+}
+.btn:active:not(:disabled) {
+  transform: translateY(1px);
+  box-shadow: none;
 }
 .btn:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
   cursor: progress;
+  box-shadow: none;
 }
 .btn-quiet {
-  background: transparent;
+  background: #fff;
   color: var(--color-ink);
   border-color: var(--color-line);
 }
-.btn-quiet:hover {
+.btn-quiet:hover:not(:disabled) {
   background: var(--color-well);
+  border-color: #aeb8bf;
 }
 .btn-danger {
-  background: transparent;
+  background: #fff;
   color: var(--color-alarm);
   border-color: var(--color-alarm);
 }
-.btn-danger:hover {
+.btn-danger:hover:not(:disabled) {
   background: var(--color-alarm-wash);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn,
+  .input {
+    transition: none;
+  }
+  .btn:active:not(:disabled) {
+    transform: none;
+  }
 }
 
 .data-table {
   width: 100%;
-  border-collapse: collapse;
+  /* บนจอแคบให้เลื่อนตารางแนวนอนแทนการบีบข้อความจนอ่านยาก */
+  min-width: 38rem;
+  border-collapse: separate;
+  border-spacing: 0;
 }
 .data-table th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
   text-align: left;
   font-weight: 600;
   color: var(--color-steel);
-  font-size: 0.85rem;
-  padding: 0.5rem 0.75rem;
-  border-bottom: 2px solid var(--color-line);
+  font-size: 0.8rem;
+  letter-spacing: 0.02em;
+  background: var(--color-well);
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--color-line);
   white-space: nowrap;
 }
+.data-table th:first-child {
+  border-top-left-radius: var(--radius-control);
+}
+.data-table th:last-child {
+  border-top-right-radius: var(--radius-control);
+}
 .data-table td {
-  overflow-wrap: anywhere;
-  padding: 0.55rem 0.75rem;
+  /* break-word ตัดเฉพาะคำที่ยาวเกินช่อง ไม่ตัดกลางคำทั่วไปเหมือน anywhere */
+  overflow-wrap: break-word;
+  padding: 0.6rem 0.75rem;
   border-bottom: 1px solid var(--color-line);
   vertical-align: top;
 }
+.data-table tbody tr:last-child td {
+  border-bottom: 0;
+}
+.data-table tbody tr:hover td {
+  background: var(--color-well);
+}
 .data-table tr[data-abnormal="true"] td {
   background: var(--color-alarm-wash);
+}
+.data-table tr[data-abnormal="true"]:hover td {
+  background: #f8d8da;
 }
 
 @keyframes alarm-blink {
@@ -133,8 +208,23 @@ body {
 .blink {
   animation: alarm-blink 1.2s steps(1) infinite;
 }
+
+/* โครงหน้าระหว่างรอข้อมูล */
+@keyframes skeleton-sweep {
+  100% {
+    background-position: -200% 0;
+  }
+}
+.skeleton {
+  background: linear-gradient(90deg, var(--color-well) 25%, #e3e8eb 50%, var(--color-well) 75%);
+  background-size: 200% 100%;
+  border-radius: var(--radius-control);
+  animation: skeleton-sweep 1.4s linear infinite;
+}
+
 @media (prefers-reduced-motion: reduce) {
-  .blink {
+  .blink,
+  .skeleton {
     animation: none;
   }
 }

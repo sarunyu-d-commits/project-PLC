@@ -76,13 +76,13 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
       <PageHeader title="ภาพรวมโรงงาน" description="สถานะเครื่องจักรปัจจุบัน Alarm ที่ยังไม่ปิด และงานซ่อมที่ค้างอยู่" />
 
       {denied && (
-        <p role="alert" className="mb-4 border-l-4 border-alarm bg-alarm-wash px-3 py-2 text-sm">
+        <p role="alert" className="mb-4 rounded-control border border-alarm/40 border-l-4 border-l-alarm bg-alarm-wash px-3 py-2 text-sm">
           บัญชีของคุณไม่มีสิทธิ์เข้าหน้านั้น
         </p>
       )}
 
       {/* แถบสรุปตัวเลข */}
-      <dl className="mb-6 grid grid-cols-2 border border-line bg-surface sm:grid-cols-4 lg:grid-cols-8">
+      <dl className="mb-6 grid grid-cols-2 gap-3 sm:grid-cols-4 xl:grid-cols-8">
         <Stat label="เครื่องทั้งหมด" value={machines.length} />
         {STATUS_ORDER.map((s) => (
           <Stat
@@ -116,27 +116,32 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
         ) : (
           <div className="flex flex-col gap-3">
             {[...byLocation.entries()].map(([loc, list]) => (
-              <div key={loc} className="grid gap-px border border-line bg-line sm:grid-cols-[8rem_1fr]">
-                <div className="bg-well px-3 py-2 font-semibold">{loc}</div>
-                <ul className="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] gap-px bg-panel">
+              <div
+                key={loc}
+                className="grid overflow-hidden rounded-card border border-line bg-surface shadow-card sm:grid-cols-[8.5rem_1fr]"
+              >
+                <div className="flex items-center border-line bg-well px-3 py-2 font-semibold max-sm:border-b sm:border-r">
+                  {loc}
+                </div>
+                <ul className="grid grid-cols-[repeat(auto-fill,minmax(11rem,1fr))] content-start gap-2 p-2">
                   {list.map((m) => {
                     const stale = m.plc_linked && isStale(m.last_seen_at);
                     const tone =
                       m.status === "alarm"
-                        ? "bg-alarm-wash outline-2 -outline-offset-2 outline-alarm"
+                        ? "border-alarm bg-alarm-wash outline-1 -outline-offset-2 outline-alarm"
                         : m.status === "maintenance"
-                          ? "bg-maint-wash"
-                          : "bg-surface";
+                          ? "border-line bg-maint-wash"
+                          : "border-line bg-well/70";
                     return (
-                      <li key={m.id} className={tone}>
-                        <Link href={`/machines/${m.id}`} className="block px-3 py-2 hover:underline">
+                      <li key={m.id} className={`rounded-control border ${tone}`}>
+                        <Link href={`/machines/${m.id}`} className="block h-full px-3 py-2.5 hover:underline">
                           <span className="tabular block font-semibold">{m.machine_code}</span>
                           <span className="block truncate text-sm text-steel">{m.name}</span>
-                          <span className="mt-1 block text-sm">
+                          <span className="mt-1.5 block text-sm">
                             <MachineStatusMark status={m.status} />
                           </span>
                           {m.plc_linked && (
-                            <span className={`block text-xs ${stale ? "font-semibold text-maint" : "text-steel"}`}>
+                            <span className={`mt-0.5 block text-xs ${stale ? "font-semibold text-maint" : "text-steel"}`}>
                               {stale ? "PLC ขาดการติดต่อ ข้อมูลอาจไม่เป็นปัจจุบัน" : "สถานะจาก PLC"}
                             </span>
                           )}
@@ -151,7 +156,7 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
         )}
       </section>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[3fr_2fr]">
+      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[3fr_2fr]">
         <Panel title={`Alarm ที่ยังไม่ปิด ${activeCount} รายการ${openCount ? ` (ยังไม่มีคนรับ ${openCount})` : ""}`}>
           {activeAlarms.length === 0 ? (
             <EmptyState>ไม่มี Alarm ค้าง</EmptyState>
@@ -199,13 +204,15 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
             <ol className="flex h-40 items-end gap-2" aria-label="กราฟจำนวน Alarm รายวัน">
               {days.map((d) => (
                 <li key={d.key} className="flex h-full flex-1 flex-col items-center justify-end gap-1">
-                  <span className="tabular text-sm font-semibold">{d.count}</span>
+                  <span className={`tabular text-sm font-semibold ${d.count ? "" : "text-steel"}`}>{d.count}</span>
                   <span
-                    className={`w-full ${d.count ? "bg-ink" : "bg-line"}`}
+                    className={`w-full rounded-t-[3px] ${d.count ? "bg-steel" : "bg-line"}`}
                     style={{ height: `${Math.max(2, (d.count / maxDay) * 100)}%` }}
                     aria-hidden="true"
                   />
-                  <span className="text-xs whitespace-nowrap text-steel">{d.label}</span>
+                  <span className="w-full border-t border-line pt-1 text-center text-xs whitespace-nowrap text-steel">
+                    {d.label}
+                  </span>
                 </li>
               ))}
             </ol>
@@ -219,8 +226,11 @@ export default async function DashboardPage(props: PageProps<"/dashboard">) {
                 {topMachines.map(({ machine, n }) => (
                   <li key={machine?.id ?? n} className="grid grid-cols-[6rem_1fr_2rem] items-center gap-3">
                     <span className="tabular font-medium">{machine?.machine_code ?? "–"}</span>
-                    <span className="h-2 bg-well">
-                      <span className="block h-full bg-ink" style={{ width: `${(n / topMachines[0].n) * 100}%` }} />
+                    <span className="h-2.5 rounded-full bg-well">
+                      <span
+                        className="block h-full rounded-full bg-steel"
+                        style={{ width: `${(n / topMachines[0].n) * 100}%` }}
+                      />
                     </span>
                     <span className="tabular text-right">{n}</span>
                   </li>
@@ -242,21 +252,26 @@ function Stat({ label, value, tone, href, note }: {
   note?: string;
 }) {
   const color = tone === "alarm" ? "text-alarm" : tone === "maint" ? "text-maint" : "";
+  const accent =
+    tone === "alarm" ? "border-l-4 border-l-alarm" : tone === "maint" ? "border-l-4 border-l-maint" : "";
   const body = (
     <>
-      <dt className="text-sm text-steel">{label}</dt>
-      <dd className={`tabular text-3xl font-semibold ${color}`}>{value}</dd>
-      {note && <dd className="text-xs font-medium text-maint">{note}</dd>}
+      <dt className="truncate text-sm text-steel">{label}</dt>
+      <dd className={`tabular mt-0.5 text-3xl leading-none font-semibold ${color}`}>{value}</dd>
+      {note && <dd className="mt-1 text-xs font-medium text-maint">{note}</dd>}
     </>
   );
   return (
-    <div className="border-line px-4 py-3 not-last:border-r max-lg:border-b">
+    <div className={`rounded-card border border-line bg-surface shadow-card ${accent}`}>
       {href ? (
-        <Link href={href} className="block hover:underline">
+        <Link
+          href={href}
+          className="block rounded-card px-4 py-3 transition-colors hover:bg-well focus-visible:outline-offset-0"
+        >
           {body}
         </Link>
       ) : (
-        body
+        <div className="px-4 py-3">{body}</div>
       )}
     </div>
   );

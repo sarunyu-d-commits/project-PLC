@@ -7,8 +7,8 @@ export default async function NoAccessPage() {
   if (await getCurrentProfile()) redirect("/dashboard");
 
   return (
-    <main className="grid min-h-dvh place-items-center p-6">
-      <div className="max-w-md border border-line bg-surface p-6">
+    <main className="grid min-h-dvh place-items-center bg-linear-to-b from-panel to-well p-6">
+      <div className="max-w-md rounded-card border border-line bg-surface p-6 shadow-raised">
         <h1 className="text-xl font-semibold">บัญชียังไม่ได้ตั้งค่าสิทธิ์</h1>
         <p className="mt-2 text-steel">
           ระบบไม่พบข้อมูลสิทธิ์ของบัญชีนี้ ให้ Admin รันไฟล์ supabase/migrations/004_backfill_profiles.sql

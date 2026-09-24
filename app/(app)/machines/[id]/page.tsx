@@ -53,7 +53,7 @@ export default async function MachineDetailPage(props: PageProps<"/machines/[id]
 
   return (
     <>
-      <p className="mb-2 text-sm"><Link href="/machines" className="underline underline-offset-2">เครื่องจักรทั้งหมด</Link></p>
+      <p className="mb-2 text-sm"><Link href="/machines" className="text-steel underline-offset-2 hover:underline">← เครื่องจักรทั้งหมด</Link></p>
       <PageHeader
         title={`${machine.machine_code} ${machine.name}`}
         description={`${machine.machine_type} ที่ ${machine.location}`}
@@ -65,7 +65,7 @@ export default async function MachineDetailPage(props: PageProps<"/machines/[id]
         }
       />
 
-      <dl className="mb-6 flex flex-wrap gap-x-10 gap-y-3 border border-line bg-surface px-4 py-3">
+      <dl className="mb-6 flex flex-wrap gap-x-10 gap-y-3 rounded-card border border-line bg-surface px-4 py-3 shadow-card">
         <div><dt className="text-sm text-steel">สถานะ</dt><dd className="text-lg"><MachineStatusMark status={machine.status} /></dd></div>
         <div><dt className="text-sm text-steel">Alarm ทั้งหมด</dt><dd className="tabular text-lg font-semibold">{alarmTotal}</dd></div>
         <div><dt className="text-sm text-steel">งานซ่อมทั้งหมด</dt><dd className="tabular text-lg font-semibold">{maintTotal}</dd></div>
@@ -79,7 +79,7 @@ export default async function MachineDetailPage(props: PageProps<"/machines/[id]
         </div>
       </dl>
 
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[3fr_2fr]">
+      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[3fr_2fr]">
         <Panel title="ประวัติเครื่อง">
           {timeline.length === 0 ? (
             <EmptyState>ยังไม่มีประวัติ Alarm หรืองานซ่อม</EmptyState>
@@ -87,7 +87,13 @@ export default async function MachineDetailPage(props: PageProps<"/machines/[id]
             <ol className="relative flex flex-col gap-4 border-l-2 border-line pl-5">
               {timeline.map((t) =>
                 t.kind === "alarm" ? (
-                  <li key={`a-${t.alarm.id}`}>
+                  <li key={`a-${t.alarm.id}`} className="relative">
+                    <span
+                      className={`absolute top-2 -left-[1.625rem] size-2.5 rounded-full ring-2 ring-surface ${
+                        t.alarm.status === "closed" ? "bg-line" : "bg-alarm"
+                      }`}
+                      aria-hidden="true"
+                    />
                     <p className="tabular text-sm text-steel">{formatDateTime(t.at)} {t.alarm.source === "plc" ? "Alarm จาก PLC" : t.alarm.source === "sim" ? "Alarm จำลอง" : "Alarm"}</p>
                     <p className="flex flex-wrap items-center gap-x-4 gap-y-1">
                       <Link href={`/alarms/${t.alarm.id}`} className="font-semibold underline-offset-2 hover:underline">{t.alarm.alarm_code}</Link>
@@ -97,7 +103,13 @@ export default async function MachineDetailPage(props: PageProps<"/machines/[id]
                     <p className="text-sm">{t.alarm.description}</p>
                   </li>
                 ) : (
-                  <li key={`m-${t.maint.id}`}>
+                  <li key={`m-${t.maint.id}`} className="relative">
+                    <span
+                      className={`absolute top-2 -left-[1.625rem] size-2.5 rounded-full ring-2 ring-surface ${
+                        t.maint.status === "done" ? "bg-line" : "bg-maint"
+                      }`}
+                      aria-hidden="true"
+                    />
                     <p className="tabular text-sm text-steel">{formatDateTime(t.at)} {MAINT_TYPE_LABEL[t.maint.maintenance_type]}{t.maint.technician ? ` โดย ${t.maint.technician.full_name}` : ""}</p>
                     <p className="flex flex-wrap items-center gap-x-4">
                       <Link href={`/maintenance/${t.maint.id}`} className="font-semibold underline-offset-2 hover:underline">{t.maint.problem}</Link>

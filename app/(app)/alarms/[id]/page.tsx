@@ -39,7 +39,7 @@ export default async function AlarmDetailPage(props: PageProps<"/alarms/[id]">) 
 
   return (
     <>
-      <p className="mb-2 text-sm"><Link href="/alarms" className="underline underline-offset-2">Alarm ทั้งหมด</Link></p>
+      <p className="mb-2 text-sm"><Link href="/alarms" className="text-steel underline-offset-2 hover:underline">← Alarm ทั้งหมด</Link></p>
       <PageHeader
         title={`Alarm ${alarm.alarm_code}`}
         description={alarm.description}
@@ -51,13 +51,13 @@ export default async function AlarmDetailPage(props: PageProps<"/alarms/[id]">) 
           ) : undefined
         }
       />
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-2">
         <Panel title="รายละเอียด">
-          <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-2">
+          <dl className="grid grid-cols-[7rem_1fr] gap-x-4 [&>div:last-child>*]:border-b-0">
             {rows.map(([k, v]) => (
               <div key={k} className="contents">
-                <dt className="text-steel">{k}</dt>
-                <dd>{v}</dd>
+                <dt className="border-b border-line py-2 text-steel">{k}</dt>
+                <dd className="border-b border-line py-2">{v}</dd>
               </div>
             ))}
           </dl>

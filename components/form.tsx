@@ -21,7 +21,7 @@ export function Field({
   const error = state?.fieldErrors?.[name];
   return (
     <div className={`flex flex-col gap-1 ${className}`}>
-      <label htmlFor={name} className="text-sm font-medium">
+      <label htmlFor={name} className="text-sm font-medium text-steel">
         {label}
       </label>
       {children}
@@ -65,8 +65,8 @@ export function FormMessage({ state }: { state: ActionState }) {
   return (
     <p
       role={state.ok ? "status" : "alert"}
-      className={`border-l-4 px-3 py-2 text-sm ${
-        state.ok ? "border-run bg-surface" : "border-alarm bg-alarm-wash text-ink"
+      className={`rounded-control border border-l-4 px-3 py-2 text-sm ${
+        state.ok ? "border-line border-l-run bg-well" : "border-alarm/40 border-l-alarm bg-alarm-wash text-ink"
       }`}
     >
       {state.message}

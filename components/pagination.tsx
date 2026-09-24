@@ -32,18 +32,20 @@ export function Pagination({ basePath, params, page, total, shown }: {
         <div className="flex items-center gap-2">
           {page > 1 ? (
             <Link className="btn btn-quiet" href={hrefFor(basePath, params, page - 1)} rel="prev">
-              ก่อนหน้า
+              ← ก่อนหน้า
             </Link>
           ) : (
-            <span className="btn btn-quiet" aria-disabled="true" style={{ opacity: 0.5 }}>ก่อนหน้า</span>
+            <span className="btn btn-quiet opacity-45" aria-disabled="true">← ก่อนหน้า</span>
           )}
-          <span className="tabular text-sm">หน้า {page} จาก {totalPages}</span>
+          <span className="tabular rounded-control bg-well px-2.5 py-1 text-sm text-steel">
+            หน้า {page} จาก {totalPages}
+          </span>
           {page < totalPages ? (
             <Link className="btn btn-quiet" href={hrefFor(basePath, params, page + 1)} rel="next">
-              ถัดไป
+              ถัดไป →
             </Link>
           ) : (
-            <span className="btn btn-quiet" aria-disabled="true" style={{ opacity: 0.5 }}>ถัดไป</span>
+            <span className="btn btn-quiet opacity-45" aria-disabled="true">ถัดไป →</span>
           )}
         </div>
       )}

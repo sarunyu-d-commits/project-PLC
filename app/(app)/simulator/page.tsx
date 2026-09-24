@@ -36,7 +36,7 @@ export default async function SimulatorPage() {
         description="ใช้แทน PLC สำหรับทดสอบและสาธิตระบบ ทุกคำสั่งมีผลกับข้อมูลจริง Alarm ที่สร้างจากหน้านี้จะมีป้าย “จำลอง” กำกับ"
       />
 
-      <ol className="mb-6 grid gap-x-8 gap-y-2 border border-line bg-well px-4 py-3 text-sm sm:grid-cols-2 lg:grid-cols-4">
+      <ol className="mb-6 grid gap-x-8 gap-y-2 rounded-card border border-line bg-well px-4 py-3 text-sm shadow-card sm:grid-cols-2 lg:grid-cols-4">
         <li><span className="font-semibold">จำลอง Fault</span> สร้าง Alarm และเครื่องเปลี่ยนเป็น Alarm ทันที</li>
         <li><span className="font-semibold">เข้าซ่อม</span> ทำได้แม้มี Alarm ค้าง</li>
         <li><span className="font-semibold">ปิด Alarm</span> ที่หน้า Alarm เมื่อปิดครบ เครื่องจะเป็น Stop</li>

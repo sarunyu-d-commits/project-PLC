@@ -32,19 +32,19 @@ export default async function MaintenanceDetailPage(props: PageProps<"/maintenan
 
   return (
     <>
-      <p className="mb-2 text-sm"><Link href="/maintenance" className="underline underline-offset-2">งานซ่อมทั้งหมด</Link></p>
+      <p className="mb-2 text-sm"><Link href="/maintenance" className="text-steel underline-offset-2 hover:underline">← งานซ่อมทั้งหมด</Link></p>
       <PageHeader
         title={record.problem}
         description={`${MAINT_TYPE_LABEL[record.maintenance_type]} ของ ${record.machine?.machine_code} ${record.machine?.name}`}
       />
-      <div className="grid grid-cols-1 gap-6 lg:grid-cols-[2fr_3fr]">
+      <div className="grid grid-cols-1 items-start gap-6 lg:grid-cols-[2fr_3fr]">
         <Panel title="สรุป">
-          <dl className="grid grid-cols-[7rem_1fr] gap-x-4 gap-y-2">
-            <dt className="text-steel">สถานะ</dt><dd><MaintStatusMark status={record.status} /></dd>
-            <dt className="text-steel">ช่าง</dt><dd>{record.technician?.full_name ?? "ยังไม่มีคนรับ"}</dd>
-            <dt className="text-steel">เริ่ม</dt><dd className="tabular">{formatDateTime(record.started_at)}</dd>
-            <dt className="text-steel">เสร็จ</dt><dd className="tabular">{formatDateTime(record.completed_at)}</dd>
-            <dt className="text-steel">Alarm</dt>
+          <dl className="grid grid-cols-[7rem_1fr] gap-x-4 [&>dd]:border-b [&>dd]:border-line [&>dd]:py-2 [&>dd:last-of-type]:border-b-0 [&>dt]:border-b [&>dt]:border-line [&>dt]:py-2 [&>dt]:text-steel [&>dt:last-of-type]:border-b-0">
+            <dt>สถานะ</dt><dd><MaintStatusMark status={record.status} /></dd>
+            <dt>ช่าง</dt><dd>{record.technician?.full_name ?? "ยังไม่มีคนรับ"}</dd>
+            <dt>เริ่ม</dt><dd className="tabular">{formatDateTime(record.started_at)}</dd>
+            <dt>เสร็จ</dt><dd className="tabular">{formatDateTime(record.completed_at)}</dd>
+            <dt>Alarm</dt>
             <dd>{record.alarm ? <Link className="underline underline-offset-2" href={`/alarms/${record.alarm.id}`}>{record.alarm.alarm_code}</Link> : "–"}</dd>
           </dl>
         </Panel>

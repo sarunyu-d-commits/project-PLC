@@ -47,7 +47,9 @@ export default async function MachinesPage(props: PageProps<"/machines">) {
       />
 
       {sp.deleted && (
-        <p role="status" className="mb-4 border-l-4 border-run bg-surface px-3 py-2 text-sm">ลบเครื่องจักรแล้ว</p>
+        <p role="status" className="mb-4 rounded-control border border-line border-l-4 border-l-run bg-well px-3 py-2 text-sm">
+          ลบเครื่องจักรแล้ว
+        </p>
       )}
 
       <FilterBar action="/machines" activeCount={activeCount}>

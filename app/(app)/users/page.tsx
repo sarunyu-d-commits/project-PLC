@@ -16,7 +16,7 @@ export default async function UsersPage() {
         title="ผู้ใช้งานและสิทธิ์"
         description="ผู้ใช้ใหม่จะได้สิทธิ์ Viewer (ดูอย่างเดียว) จนกว่า Admin จะเปลี่ยนให้"
       />
-      <div className="grid grid-cols-1 gap-6 xl:grid-cols-[3fr_2fr]">
+      <div className="grid grid-cols-1 items-start gap-6 xl:grid-cols-[3fr_2fr]">
         <Panel>
           <div className="relative overflow-x-auto">
             <table className="data-table">
